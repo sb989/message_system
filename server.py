@@ -13,6 +13,7 @@ def userLoop(conn_addr):
         while option != 2:
             '''0 for nothing, 1 for create account, 2 for logging in, -1 for quitting'''
             option = conn.recv(28).decode()
+            print(option)
             if option == 1:
                 sizeofuser = int.from_bytes(conn.recv(28),byteorder='big')
                 user = conn.recv(sizeofuser).decode()
