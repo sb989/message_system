@@ -58,12 +58,13 @@ while loop:
             #conn,addr = ssock.accept()
         except:
             print("thread or wrapping broke")
-    except:
-        print("something broke")
+
     except KeyBoardInterrupt:
         sock.close()
         sys.exit(0)
         print('closing')
+    except:
+        print("something broke")
 '''with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
     sock.bind(('0.0.0.0', 8443))
     sock.listen(5)
