@@ -23,7 +23,7 @@ def userLoop(conn_addr):
                 print("creating user "+user+" with password "+pword)
                 command = 'INSERT INTO user_info VALUES('+user+','+pword+',OFFLINE,NULL);'
                 print(command)
-                #crsr.execute(command)
+                crsr.execute(command)
             if option == -1:
                 break
         if option == 2:
@@ -33,10 +33,12 @@ def userLoop(conn_addr):
             pword = conn.recv(sizeofpword).decode()
             command = 'SELECT Pword FROM user_info WHERE (Username='+user+');'
             print(command)
+            crsr.execute(command)
+            ans = crsr.fetchall()
+            print(ans)
     except ConnectionResetError:
         print('user disconnected')
-        #crsr.execute(command)
-        #ans = crsr.fetchall()
+
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 context.load_cert_chain('certificate.pem', 'privkey.pem')
