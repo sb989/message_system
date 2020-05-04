@@ -1,13 +1,13 @@
 import socket
 import ssl
-import sqlite3
+import mysql.connector
 import threading
 import sys
 def userLoop(conn_addr):
     conn = conn_addr[0]
     addr = conn_addr[1]
     option = 0
-    sqlconn = sqlite3.connect("message_system.db")
+    sqlconn = mysql.connector.connect("message_system.db")
     crsr = sqlconn.cursor()
     try:
         while option != 2:
