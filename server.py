@@ -36,6 +36,7 @@ def userLoop(conn_addr):
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 context.load_cert_chain('certificate.pem', 'privkey.pem')
+loop = True
 try:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
 except:
@@ -48,17 +49,18 @@ except:
     print('bind failed')
     sock.close()
     sys.exit(0)
-while 1==1:
+while loop:
     sock.listen(5)
     try:
         ssock = context.wrap_socket(sock,server_side=True)
         threading.Thread(target=userLoop,args=(ssock.accept(),)).start()
         #conn,addr = ssock.accept()
-    except:
+    except KeyBoardInterrupt:
         sock.close()
         sys.exit(0)
-        print('something broke')
-
+        print('closing')
+    except:
+        print("something broke")
 '''with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
     sock.bind(('0.0.0.0', 8443))
     sock.listen(5)

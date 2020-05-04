@@ -2,8 +2,8 @@ import socket
 import ssl
 import sys
 class Client:
-    def login(connection):
-        connection.send(2)
+    def login(self,connection):
+        connection.send((2).to_bytes(1,byteorder='big'))
         user = input("Enter your username.")
         password = input("Enter your password.")
         sizeofuser = sys.getsizeof(user)
@@ -14,8 +14,8 @@ class Client:
         connection.send(password)
 
 
-    def createAccount(connection):
-        connection.send(1)
+    def createAccount(self,connection):
+        connection.send((1).to_bytes(1,byteorder='big'))
         user = input("Enter the user name.")
         password = input("Enter your password.")
         confirm = input("Confirm the password by entering it again.")
@@ -29,7 +29,7 @@ class Client:
         connection.send(password)
         print("You have created an account.")
 
-    def connectToServer(hostname,port,ca_name,ca_file):
+    def connectToServer(self,hostname,port,ca_name,ca_file):
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         context.load_verify_locations(ca_file)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
@@ -57,15 +57,15 @@ class Client:
 
     def __init__(self):
         quit = False
-        #hostname = '192.168.1.157'
-        hostname = '71.255.90.82'
+        hostname = '192.168.1.157'
+        #hostname = '71.255.90.82'
         port = 8443
         connection = self.connectToServer(hostname,port,'NADGE','certificate.pem')
         while connection == None:
             again = input('Failed to connect. Try again? Y/N')
-            if !again.lower() == 'y':
+            if again.lower() == 'y':
                 connection = self.connectToServer(hostname,port,'NADGE','certificate.pem')
-            elif !again.lower() == 'n':
+            elif again.lower() == 'n':
                 quit = True
                 break
             else:
@@ -95,3 +95,5 @@ class Client:
             elif option == 'q':
                 quit = True
             else:
+                print(option)
+Client()
