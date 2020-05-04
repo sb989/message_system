@@ -1,22 +1,97 @@
 import socket
 import ssl
-
-#hostname = '192.168.1.157'
-hostname = '71.255.90.82'
-port = 8443
-context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-context.load_verify_locations('certificate.pem')
-
-#with s.create_connection((hostname,port)) as sock:
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
-    sock.settimeout(10)
-    sock.connect((hostname,port))
-    with context.wrap_socket(sock,server_hostname = 'NADGE') as ssock:
-        print(ssock.server_hostname)
-        print(ssock.version())
+import sys
+class Client:
+    def login(connection):
+        connection.send(2)
+        user = input("Enter your username.")
+        password = input("Enter your password.")
+        sizeofuser = sys.getsizeof(user)
+        sizeofpword = sys.getsizeof(password)
+        connection.send(sizeofuser)
+        connection.send(user)
+        connecetion.send(sizeofpword)
+        connection.send(password)
 
 
+    def createAccount(connection):
+        connection.send(1)
+        user = input("Enter the user name.")
+        password = input("Enter your password.")
+        confirm = input("Confirm the password by entering it again.")
+        while confirm is not password:
+            confirm = input("That did not match the password entered. Please re-enter the password.")
+        sizeofuser = sys.getsizeof(user)
+        sizeofpword = sys.getsizeof(password)
+        connection.send(sizeofuser)
+        connection.send(user)
+        connecetion.send(sizeofpword)
+        connection.send(password)
+        print("You have created an account.")
 
-'''with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
-    with context.wrap_socket(sock, server_hostname=hostname) as ssock:
-        print(ssock.version())'''
+    def connectToServer(hostname,port,ca_name,ca_file):
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        context.load_verify_locations(ca_file)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+        #with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
+        try:
+            sock.settimeout(10)
+            sock.connect((hostname,port))
+            ssock = context.wrap_socket(sock,server_hostname = ca_name)
+            #with context.wrap_socket(sock,server_hostname = ca_name) as ssock:
+            try:
+                print(ssock.server_hostname)
+                print(ssock.version())
+                if(ssock.version() != 'None'):
+                    return ssock
+                else:
+                    return None
+            except:
+                ssock.unwrap()
+
+        except:
+            sock.close()
+
+    def printOnlineList(connection):
+        print("The users online are :")
+
+    def __init__(self):
+        quit = False
+        #hostname = '192.168.1.157'
+        hostname = '71.255.90.82'
+        port = 8443
+        connection = self.connectToServer(hostname,port,'NADGE','certificate.pem')
+        while connection == None:
+            again = input('Failed to connect. Try again? Y/N')
+            if !again.lower() == 'y':
+                connection = self.connectToServer(hostname,port,'NADGE','certificate.pem')
+            elif !again.lower() == 'n':
+                quit = True
+                break
+            else:
+                print("Invalid input.")
+
+        if not quit:
+            option = input("Press l to log in, r to create an account, or q to quit.")
+
+        while not quit:
+            if option.lower() == 'l':
+                self.login(connection)
+                break
+            elif option.lower() == 'r':
+                self.createAccount(connection)
+                option = input("Press l to log in, r to create an account, or q to quit.")
+            elif option.lower() == 'q':
+                quit = True
+            else:
+                option = input("That is not a valid input. Please press l to log in, r to create an account, or q to quit.")
+
+        if not quit:
+            option = input("To print a list of users online press l, to send a user a message enter their username followed by the message inside quotes (eg. USERNAME 'MESSAGE'), to quit press q.")
+        while not quit:
+            if option == 'l':
+                self.printOnlineList(connection)
+                option = input("To print a list of users online press l, to start chatting with a user online enter their user name, to quit press q.")
+            elif option == 'q':
+                quit = True
+            else:
