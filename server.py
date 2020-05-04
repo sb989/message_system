@@ -2,16 +2,17 @@ import socket
 import ssl
 import sqlite3
 import threading
-
+import sys
 def userLoop(conn_addr):
     conn = conn_addr[0]
     addr = conn_addr[1]
     option = 0
     sqlconn = sqlite3.connect("message_system.db")
     crsr = sqlconn.cursor()
-    while option is not 2:  '''0 for nothing, 1 for create account, 2 for logging in, -1 for quitting'''
+    while option != 2:
+        '''0 for nothing, 1 for create account, 2 for logging in, -1 for quitting'''
         option = conn.recv(28)
-        if option is 1:
+        if option == 1:
             sizeofuser = conn.recv(28)
             user = conn.recv(sizeofuser)
             sizeofpword = conn.recv(28)
@@ -21,9 +22,9 @@ def userLoop(conn_addr):
             command = 'INSERT INTO user_info VALUES('+user+','+pword+',OFFLINE,NULL);'
             print(command)
             #crsr.execute(command)
-        if option is -1:
+        if option == -1:
             break
-    if option is 2:
+    if option == 2:
         sizeofuser = conn.recv(28)
         user = conn.recv(sizeofuser)
         sizeofpword = conn.recv(28)
@@ -50,11 +51,13 @@ except:
 while 1==1:
     sock.listen(5)
     try:
-        ssock = context.wrap_socket(sock,sesrver_side=True)
+        ssock = context.wrap_socket(sock,server_side=True)
         threading.Thread(target=userLoop,args=(ssock.accept(),)).start()
         #conn,addr = ssock.accept()
     except:
-        ssock.unwrap()
+        sock.close()
+        sys.exit(0)
+        print('something broke')
 
 '''with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
     sock.bind(('0.0.0.0', 8443))

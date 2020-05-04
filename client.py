@@ -47,7 +47,7 @@ class Client:
                 else:
                     return None
             except:
-                ssock.unwrap()
+                print('something broke')#ssock.unwrap()
 
         except:
             sock.close()
