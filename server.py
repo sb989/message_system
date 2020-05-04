@@ -52,22 +52,28 @@ except:
     print('bind failed')
     sock.close()
     sys.exit(0)
+try:
+    sock.listen(10)
+except:
+    print("listen broke")
+    sock.close()
+    sys.exit(0)
+try:
+    ssock = context.wrap_socket(sock,server_side=True)
+except:
+    print("ssock broke")
+    sock.close()
+    sys.exit(0)
 while loop:
     try:
-        sock.listen(10)
-        try:
-            ssock = context.wrap_socket(sock,server_side=True)
-            threading.Thread(target=userLoop,args=(ssock.accept(),)).start()
-            #conn,addr = ssock.accept()
-        except:
-            print("thread or wrapping broke")
-
+        threading.Thread(target=userLoop,args=(ssock.accept(),)).start()
+        #conn,addr = ssock.accept()
     except KeyboardInterrupt:
         sock.close()
         sys.exit(0)
         print('closing')
     except:
-        print("something broke")
+        print("thread or wrapping broke")
 '''with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
     sock.bind(('0.0.0.0', 8443))
     sock.listen(5)
