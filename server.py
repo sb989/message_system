@@ -14,10 +14,10 @@ def userLoop(conn_addr):
             '''0 for nothing, 1 for create account, 2 for logging in, -1 for quitting'''
             option = conn.recv(28)
             if option == 1:
-                sizeofuser = conn.recv(28)
-                user = conn.recv(sizeofuser)
-                sizeofpword = conn.recv(28)
-                pword = conn.recv(sizeofpword)
+                sizeofuser = int.from_bytes(conn.recv(28),byteorder='big')
+                user = conn.recv(sizeofuser).decode()
+                sizeofpword = int.from_bytes(conn.recv(28),byteorder='big')
+                pword = conn.recv(sizeofpword).decode()
                 '''TO DO: check if the username is already taken'''
                 print("creating user "+user+" with password "+pword)
                 command = 'INSERT INTO user_info VALUES('+user+','+pword+',OFFLINE,NULL);'
@@ -26,10 +26,10 @@ def userLoop(conn_addr):
             if option == -1:
                 break
         if option == 2:
-            sizeofuser = conn.recv(28)
-            user = conn.recv(sizeofuser)
-            sizeofpword = conn.recv(28)
-            pword = conn.recv(sizeofpword)
+            sizeofuser = int.from_bytes(conn.recv(28),byteorder='big')
+            user = conn.recv(sizeofuser).decode()
+            sizeofpword = int.from_bytes(conn.recv(28),byteorder='big')
+            pword = conn.recv(sizeofpword).decode()
             command = 'SELECT Pword FROM user_info WHERE (Username='+user+');'
             print(command)
     except ConnectionResetError:

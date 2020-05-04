@@ -8,10 +8,10 @@ class Client:
         password = input("Enter your password.")
         sizeofuser = sys.getsizeof(user)
         sizeofpword = sys.getsizeof(password)
-        connection.send(sizeofuser)
-        connection.send(user)
-        connecetion.send(sizeofpword)
-        connection.send(password)
+        connection.send((sizeofuser).to_bytes(3,byteorder='big'))
+        connection.send(user.encode())
+        connecetion.send((sizeofpword).to_bytes(3,byteorder='big'))
+        connection.send(password.encode())
 
 
     def createAccount(self,connection):
@@ -23,10 +23,10 @@ class Client:
             confirm = input("That did not match the password entered. Please re-enter the password.")
         sizeofuser = sys.getsizeof(user)
         sizeofpword = sys.getsizeof(password)
-        connection.send(sizeofuser)
-        connection.send(user)
-        connecetion.send(sizeofpword)
-        connection.send(password)
+        connection.send((sizeofuser).to_bytes(3,byteorder='big'))
+        connection.send(user.encode())
+        connecetion.send((sizeofpword).to_bytes(3,byteorder='big'))
+        connection.send(password.encode())
         print("You have created an account.")
 
     def connectToServer(self,hostname,port,ca_name,ca_file):
