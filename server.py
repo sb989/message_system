@@ -42,9 +42,9 @@ def createAccount(conn,crsr,sqlconn):
     sqlconn.commit()
 
 def login(conn,crsr,sqlconn):
-    updateLoggedIn = 'UPDATE user_info SET (LoggedIn = %s) WHERE (Username = %s) '
+    updateLoggedIn = 'UPDATE user_info SET LoggedIn = %s WHERE (Username = %s) '
     loginCommand = 'SELECT Pword FROM user_info WHERE (Username = %s)'
-    storePkey = 'INSERT INTO user_info (PublicKey) VALUES(%s) WHERE (Username = %s) '
+    storePkey = 'UPDATE user_info SET PublicKey = %s WHERE (Username = %s) '
     getSalt = 'SELECT Salt FROM user_info WHERE (Username = %s)'
     sizeofuser = int.from_bytes(conn.recv(28),byteorder='big')
     user = conn.recv(sizeofuser)

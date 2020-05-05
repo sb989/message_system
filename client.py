@@ -128,7 +128,7 @@ class Client:
         port = 8443
 
         connection = self.connectionPrompt(hostname,port,'NADGE','certificate.pem')
-        if(connection == None)
+        if connection is None:
             quit = True
 
         if not quit:
