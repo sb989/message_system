@@ -65,7 +65,7 @@ except:
     sys.exit(0)
 try:
     sock.bind(('0.0.0.0', 8443))
-except:
+except ConnectionResetError:
     print('bind failed')
     sock.close()
     sys.exit(0)
