@@ -1,6 +1,9 @@
 import socket
 import ssl
 import sys
+import nacl.utils
+from nacl.public import PrivateKey, Box
+
 class Client:
     def login(self,connection):
         connection.send((2).to_bytes(1,byteorder='big'))
@@ -19,6 +22,11 @@ class Client:
             connection.send((sizeofpword).to_bytes(3,byteorder='big'))
             connection.send(password.encode())
             response = int.from_bytes(conn.recv(28),byteorder='big')
+        skclient = PrivateKey.generate()
+        pkclient = skclient.public_key
+        sizeofpkclient = sys.getsizeof(pkclient)
+        connection.send((sizeofpkclient).to_bytes(3,byteorder='big'))
+        connection.send(pkclient)
 
     def createAccount(self,connection):
         connection.send((1).to_bytes(1,byteorder='big'))
@@ -72,25 +80,23 @@ class Client:
     def printOnlineList(self,connection):
         print("The users online are :")
 
-    def __init__(self):
-        quit = False
-        hostname = '192.168.1.157'
-        #hostname = '71.255.90.82'
-        port = 8443
-        connection = self.connectToServer(hostname,port,'NADGE','certificate.pem')
+
+    def connectionPrompt(self,hostname,port,ca_name,ca_file):
+        connection = self.connectToServer(hostname,port,ca_name,ca_file)
         while connection == None:
             again = input('Failed to connect. Try again? Y/N')
             if again.lower() == 'y':
                 connection = self.connectToServer(hostname,port,'NADGE','certificate.pem')
             elif again.lower() == 'n':
-                quit = True
+                #quit = True
                 break
             else:
                 print("Invalid input.")
+        return connection
 
-        if not quit:
-            option = input("Press l to log in, r to create an account, or q to quit.")
-
+    def loginOrCreateAccountPrompt(self,connection):
+        quit = False
+        option = input("Press l to log in, r to create an account, or q to quit.")
         while not quit:
             if option.lower() == 'l':
                 self.login(connection)
@@ -102,9 +108,10 @@ class Client:
                 quit = True
             else:
                 option = input("That is not a valid input. Please press l to log in, r to create an account, or q to quit.")
+        return quit
 
-        if not quit:
-            option = input("To print a list of users online press l, to send a user a message enter their username followed by the message inside quotes (eg. USERNAME 'MESSAGE'), to quit press q.")
+    def messagePrompt(self,connection):
+        option = input("To print a list of users online press l, to send a user a message enter their username followed by the message inside quotes (eg. USERNAME 'MESSAGE'), to quit press q.")
         while not quit:
             if option == 'l':
                 self.printOnlineList(connection)
@@ -113,4 +120,20 @@ class Client:
                 quit = True
             else:
                 print(option)
+
+    def __init__(self):
+        quit = False
+        hostname = '192.168.1.157'
+        #hostname = '71.255.90.82'
+        port = 8443
+
+        connection = self.connectionPrompt(hostname,port,'NADGE','certificate.pem')
+        if(connection == None)
+            quit = True
+
+        if not quit:
+            quit = self.loginOrCreateAccountPrompt(connection)
+
+        if not quit:
+            self.messagePrompt(connection)
 Client()
