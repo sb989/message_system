@@ -69,6 +69,7 @@ def userLoop(conn_addr):
             salt = (crsr.fetchall())[0][0]
             print('the salt returned is')
             print(salt)
+            print(typeof(salt))
             crsr.execute(loginCommand,(user.decode(),))
             ans = crsr.fetchall()
 
