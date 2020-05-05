@@ -67,13 +67,13 @@ def userLoop(conn_addr):
             #print(command)
             crsr.execute(getSalt,(user.decode(),))
             salt = (crsr.fetchall())[0][0]
-            salt = salt.encode()
             salt = bytes(salt)
             print('the salt returned is')
             print(salt)
             print(type(salt))
             crsr.execute(loginCommand,(user.decode(),))
             ans = (crsr.fetchall())[0][0]
+            ans = ans.encode()
             print(ans)
             ans = bytes(ans)
 
