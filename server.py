@@ -83,7 +83,14 @@ def login(conn,crsr,sqlconn):
 def returnOnlineUsers(conn,crsr,sqlconn):
     getUsersOnline = "SELECT Username FROM user_info WHERE (LoggedIn = 'ONLINE')"
     crsr.execute(getUsersOnline)
-    print(crsr.fetchall())
+    users = crsr.fetchall()
+    print(users)
+    users = str(users)
+    users = users.encode()
+    sizeofusers = sys.getsizeof(users)
+    conn.send(sizeofusers.to_bytes(3,byteorder='big'))
+    conn.send(users)
+
 
 def userLoop(conn_addr,q):
     conn = conn_addr[0]

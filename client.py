@@ -21,7 +21,7 @@ class Client:
             sizeofpword = sys.getsizeof(password)
             connection.send((sizeofpword).to_bytes(3,byteorder='big'))
             connection.send(password.encode())
-            response = int.from_bytes(conn.recv(28),byteorder='big')
+            response = int.from_bytes(connection.recv(28),byteorder='big')
         skclient = PrivateKey.generate()
         pkclient = skclient.public_key
         pkclient = bytes(pkclient)
@@ -80,7 +80,12 @@ class Client:
 
     def printOnlineList(self,connection):
         connection.send((0).to_bytes(1,byteorder='big'))
+        sizeof = int.from_bytes(connection.recv(28),byteorder='big')
+        users = connection.recv(sizeof)
+        users = users.decode()
+        users = eval
         print("The users online are :")
+        print(users)
 
 
     def connectionPrompt(self,hostname,port,ca_name,ca_file):
