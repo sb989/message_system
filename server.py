@@ -22,6 +22,8 @@ def userLoop(conn_addr):
                 user = conn.recv(sizeofuser).decode()
                 crsr.execute(userExistCommand,(user,))
                 ans = crsr.fetchall()
+                print(ans)
+                print(ans[0])
                 while ans[0] > 0:
                     conn.send((1).to_bytes(1,byteorder='big'))
                     sizeofuser = int.from_bytes(conn.recv(28),byteorder='big')
