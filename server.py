@@ -54,6 +54,8 @@ def userLoop(conn_addr):
                 key = base64.urlsafe_b64encode(kdf.derive(encUser))
                 f = Fernet(key)
                 encPword = f.encrypt(pword)
+                print('salt is ')
+                print(salt)
                 crsr.execute(createCommand,(encUser.decode(),encPword,'OFFLINE',salt))
                 sqlconn.commit()
             if option == -1:

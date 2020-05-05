@@ -12,7 +12,7 @@ class Client:
         connection.send(user.encode())
         connection.send((sizeofpword).to_bytes(3,byteorder='big'))
         connection.send(password.encode())
-        response = int.from_bytes(conn.recv(28),byteorder='big')
+        response = int.from_bytes(connection.recv(28),byteorder='big')
         while response >0:
             password = input("You entered the wrong password. Please re-enter your password.")
             sizeofpword = sys.getsizeof(password)
@@ -60,8 +60,8 @@ class Client:
                 print(ssock.server_hostname)
                 print(ssock.version())
                 cert = ssock.getpeercert()
-                print(cert)
-                print(ca_name)
+                #print(cert)
+                #print(ca_name)
                 ssl.match_hostname(cert,ca_name)
                 return ssock
             except:
