@@ -70,7 +70,9 @@ def userLoop(conn_addr):
             f = Fernet(privateKey)
             encUser = f.encrypt(user)
             crsr.execute(getSalt,(encUser.decode(),))
-            salt = (crsr.fetchall())[0][0]
+            salt = crsr.fetchall()
+            print('the salt returned is')
+            print(salt)
             crsr.execute(loginCommand,(encUser.decode(),))
             ans = (crsr.fetchall())[0][0]
             kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),length=32,salt=salt,iterations=100000,backend=default_backend())
