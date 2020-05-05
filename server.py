@@ -10,7 +10,7 @@ def userLoop(conn_addr):
     sqlconn = mysql.connector.connect(user='root',password='Swiffty@05631',host='127.0.0.1',database='message_system')
     crsr = sqlconn.cursor()
     createCommand = 'INSERT INTO user_info (Username,Pword,LoggedIn) VALUES(%s,%s,%s)'
-    loginCommand = 'SELECT Pword FROM user_info WHERE (USERNAME = %s)'
+    loginCommand = 'SELECT Pword FROM user_info WHERE (Username = %s)'
     try:
         while option != 2:
             '''0 for nothing, 1 for create account, 2 for logging in, -1 for quitting'''
