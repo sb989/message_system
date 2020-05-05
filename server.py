@@ -9,6 +9,7 @@ def userLoop(conn_addr):
     option = 0
     sqlconn = mysql.connector.connect(user='root',password='Swiffty@05631',host='127.0.0.1',database='message_system')
     crsr = sqlconn.cursor()
+    createCommand = 'INSERT INTO user_info (Username,Pword,LoggedIn) VALUES(%s,%s,%s)'
     try:
         while option != 2:
             '''0 for nothing, 1 for create account, 2 for logging in, -1 for quitting'''
@@ -21,9 +22,9 @@ def userLoop(conn_addr):
                 pword = conn.recv(sizeofpword).decode()
                 '''TO DO: check if the username is already taken'''
                 print("creating user "+user+" with password "+pword)
-                command = 'INSERT INTO user_info VALUES('+user+','+pword+',OFFLINE,NULL);'
-                print(command)
-                crsr.execute(command)
+                #command = 'INSERT INTO user_info VALUES('+user+','+pword+',OFFLINE,NULL);'
+                #print(command)
+                crsr.execute(createCommand,(user,pword,'OFFLINE'))
             if option == -1:
                 break
         if option == 2:
