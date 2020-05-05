@@ -106,10 +106,12 @@ def userLoop(conn_addr,q):
             login(conn,crsr,sqlconn)
             online = True
             print(online)
+            useraction = -1
             while online:
                 useraction = int.from_bytes(conn.recv(28),byteorder='big')
                 if useraction==0:
                     returnOnlineUsers(conn,crsr,sqlconn)
+                    useraction=-1
 
 
     except ConnectionResetError:

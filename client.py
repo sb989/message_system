@@ -24,6 +24,7 @@ class Client:
             response = int.from_bytes(conn.recv(28),byteorder='big')
         skclient = PrivateKey.generate()
         pkclient = skclient.public_key
+        pkclient = bytes(pkclient)
         sizeofpkclient = sys.getsizeof(pkclient)
         connection.send((sizeofpkclient).to_bytes(3,byteorder='big'))
         connection.send(pkclient)
@@ -78,6 +79,7 @@ class Client:
             sock.close()
 
     def printOnlineList(self,connection):
+        connection.send((0).to_bytes(1,byteorder='big'))
         print("The users online are :")
 
 
@@ -111,6 +113,7 @@ class Client:
         return quit
 
     def messagePrompt(self,connection):
+        quit = False
         option = input("To print a list of users online press l, to send a user a message enter their username followed by the message inside quotes (eg. USERNAME 'MESSAGE'), to quit press q.")
         while not quit:
             if option == 'l':
