@@ -54,7 +54,7 @@ def userLoop(conn_addr):
                 encPword = f.encrypt(pword)
                 print('salt is ')
                 print(salt)
-                crsr.execute(createCommand,(encUser.decode(),encPword,'OFFLINE',salt))
+                crsr.execute(createCommand,(user.decode(),encPword,'OFFLINE',salt))
                 sqlconn.commit()
             if option == -1:
                 break
