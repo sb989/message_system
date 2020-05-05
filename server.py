@@ -7,7 +7,7 @@ def userLoop(conn_addr):
     conn = conn_addr[0]
     addr = conn_addr[1]
     option = 0
-    sqlconn = mysql.connector.connect(user='root',password='Swiffty@05631',host='127.0.0.1',database='message_system')
+    sqlconn = mysql.connector.connect(user='root',password='Swiffty@05631',host='localhost',database='message_system')
     crsr = sqlconn.cursor()
     createCommand = 'INSERT INTO user_info (Username,Pword,LoggedIn) VALUES(%s,%s,%s)'
     loginCommand = 'SELECT Pword FROM user_info WHERE (Username = %s)'
@@ -26,6 +26,7 @@ def userLoop(conn_addr):
                 #command = 'INSERT INTO user_info VALUES('+user+','+pword+',OFFLINE,NULL);'
                 #print(command)
                 crsr.execute(createCommand,(user,pword,'OFFLINE'))
+                sqlconn.commit()
             if option == -1:
                 break
         if option == 2:
