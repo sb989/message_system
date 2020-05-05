@@ -10,6 +10,7 @@ def userLoop(conn_addr):
     sqlconn = mysql.connector.connect(user='root',password='Swiffty@05631',host='127.0.0.1',database='message_system')
     crsr = sqlconn.cursor()
     createCommand = 'INSERT INTO user_info (Username,Pword,LoggedIn) VALUES(%s,%s,%s)'
+    loginCommand = 'SELECT Pword FROM user_info WHERE (USERNAME = %s)'
     try:
         while option != 2:
             '''0 for nothing, 1 for create account, 2 for logging in, -1 for quitting'''
@@ -32,9 +33,9 @@ def userLoop(conn_addr):
             user = conn.recv(sizeofuser).decode()
             sizeofpword = int.from_bytes(conn.recv(28),byteorder='big')
             pword = conn.recv(sizeofpword).decode()
-            command = 'SELECT Pword FROM user_info WHERE (Username='+user+');'
-            print(command)
-            crsr.execute(command)
+            #command = 'SELECT Pword FROM user_info WHERE (Username='+user+');'
+            #print(command)
+            crsr.execute(loginCommand,(user))
             ans = crsr.fetchall()
             print(ans)
     except ConnectionResetError:
