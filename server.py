@@ -52,6 +52,8 @@ def login(conn,crsr,sqlconn):
     user = conn.recv(sizeofuser)
     crsr.execute(userExistCommand,(user,))
     ans = crsr.fetchall()
+    print('the amount of usernames that match that are ')
+    print(ans)
     while ans == 0:
         conn.send((1).to_bytes(1,byteorder='big'))
         sizeofuser = int.from_bytes(conn.recv(28),byteorder='big')
