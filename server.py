@@ -56,6 +56,7 @@ def login(conn,crsr,sqlconn):
     print(ans)
     print(ans[0][0])
     while ans[0][0] == 0:
+        print('me')
         conn.send((1).to_bytes(1,byteorder='big'))
         sizeofuser = int.from_bytes(conn.recv(28),byteorder='big')
         user = conn.recv(sizeofuser)

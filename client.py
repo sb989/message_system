@@ -8,12 +8,11 @@ class Client:
     def login(self,connection):
         connection.send((2).to_bytes(1,byteorder='big'))
         user = input("Enter your username.")
-        password = input("Enter your password.")
         sizeofuser = sys.getsizeof(user)
-        sizeofpword = sys.getsizeof(password)
         connection.send((sizeofuser).to_bytes(3,byteorder='big'))
         connection.send(user.encode())
         response = int.from_bytes(connection.recv(28),byteorder='big')
+        print(response)
         while response >0:
             user = input("You entered a user name that does not exist. Please re-enter your user name or press q to quit.")
             if user =='q':
@@ -22,6 +21,9 @@ class Client:
             connection.send((sizeofuser).to_bytes(3,byteorder='big'))
             connection.send(user.encode())
             response = int.from_bytes(connection.recv(28),byteorder='big')
+
+        password = input("Enter your password.")
+        sizeofpword = sys.getsizeof(password)
         connection.send((sizeofpword).to_bytes(3,byteorder='big'))
         connection.send(password.encode())
         response = int.from_bytes(connection.recv(28),byteorder='big')
