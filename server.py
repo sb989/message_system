@@ -54,7 +54,7 @@ def userLoop(conn_addr):
                 encPword = f.encrypt(pword)
                 print('salt is ')
                 print(salt)
-                crsr.execute(createCommand,(user.decode(),encPword,'OFFLINE',salt))
+                crsr.execute(createCommand,(user.decode(),encPword,'OFFLINE',salt,))
                 sqlconn.commit()
             if option == -1:
                 break
@@ -73,6 +73,7 @@ def userLoop(conn_addr):
             print(type(salt))
             crsr.execute(loginCommand,(user.decode(),))
             ans = (crsr.fetchall())[0][0]
+            print(ans)
             ans = bytes(ans)
 
             kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),length=32,salt=salt,iterations=100000,backend=default_backend())
