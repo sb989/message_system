@@ -46,9 +46,20 @@ def login(conn,crsr,sqlconn):
     loginCommand = 'SELECT Pword FROM user_info WHERE (Username = %s)'
     storePkey = 'UPDATE user_info SET PublicKey = %s WHERE (Username = %s) '
     getSalt = 'SELECT Salt FROM user_info WHERE (Username = %s)'
+    userExistCommand = 'SELECT COUNT(Username) FROM user_info WHERE (Username = %s)'
 
     sizeofuser = int.from_bytes(conn.recv(28),byteorder='big')
     user = conn.recv(sizeofuser)
+    crsr.execute(userExistCommand,(user,))
+    ans = crsr.fetchall()
+    while ans == 0:
+        conn.send((1).to_bytes(1,byteorder='big'))
+        sizeofuser = int.from_bytes(conn.recv(28),byteorder='big')
+        user = conn.recv(sizeofuser)
+        crsr.execute(userExistCommand,(user,))
+        ans = crsr.fetchall()
+    conn.send((0).to_bytes(1,byteorder='big'))
+
     sizeofpword = int.from_bytes(conn.recv(28),byteorder='big')
     pword = conn.recv(sizeofpword)
 

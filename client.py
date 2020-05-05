@@ -13,11 +13,22 @@ class Client:
         sizeofpword = sys.getsizeof(password)
         connection.send((sizeofuser).to_bytes(3,byteorder='big'))
         connection.send(user.encode())
+        response = int.from_bytes(connection.recv(28),byteorder='big')
+        while response >0:
+            user = input("You entered a user name that does not exist. Please re-enter your user name or press q to quit.")
+            if user =='q':
+                return True
+            sizeofuser = sys.getsizeof(user)
+            connection.send((sizeofuser).to_bytes(3,byteorder='big'))
+            connection.send(user.encode())
+            response = int.from_bytes(connection.recv(28),byteorder='big')
         connection.send((sizeofpword).to_bytes(3,byteorder='big'))
         connection.send(password.encode())
         response = int.from_bytes(connection.recv(28),byteorder='big')
         while response >0:
-            password = input("You entered the wrong password. Please re-enter your password.")
+            password = input("You entered the wrong password. Please re-enter your password or press q to quit.")
+            if password == 'q':
+                return True
             sizeofpword = sys.getsizeof(password)
             connection.send((sizeofpword).to_bytes(3,byteorder='big'))
             connection.send(password.encode())
@@ -28,6 +39,7 @@ class Client:
         sizeofpkclient = sys.getsizeof(pkclient)
         connection.send((sizeofpkclient).to_bytes(3,byteorder='big'))
         connection.send(pkclient)
+        return False
 
     def createAccount(self,connection):
         connection.send((1).to_bytes(1,byteorder='big'))
@@ -81,8 +93,11 @@ class Client:
     def printOnlineList(self,connection):
         connection.send((0).to_bytes(1,byteorder='big'))
         sizeof = int.from_bytes(connection.recv(28),byteorder='big')
+        print(sizeof)
         users = connection.recv(sizeof)
+        print(users)
         users = users.decode()
+        print(users)
         users = eval
         print("The users online are :")
         print(users)
@@ -106,7 +121,7 @@ class Client:
         option = input("Press l to log in, r to create an account, or q to quit.")
         while not quit:
             if option.lower() == 'l':
-                self.login(connection)
+                quit = self.login(connection)
                 break
             elif option.lower() == 'r':
                 self.createAccount(connection)
