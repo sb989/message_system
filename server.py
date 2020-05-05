@@ -108,7 +108,7 @@ def userLoop(conn_addr,q):
             print(online)
             while online:
                 useraction = int.from_bytes(conn.recv(28),byteorder='big')
-                if option==0:
+                if useraction==0:
                     returnOnlineUsers()
 
 
