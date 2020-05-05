@@ -86,7 +86,10 @@ def userLoop(conn_addr):
 
     except ConnectionResetError:
         print('user disconnected')
-
+    except KeyboardInterrupt:
+        sock.close()
+        sys.exit(0)
+        print('closing')
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 context.load_cert_chain('certificate.pem', 'privkey.pem')
