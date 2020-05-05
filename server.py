@@ -7,7 +7,7 @@ def userLoop(conn_addr):
     conn = conn_addr[0]
     addr = conn_addr[1]
     option = 0
-    sqlconn = mysql.connector.connect("message_system.db")
+    sqlconn = mysql.connector.connect(user='root',password='Swiffty@05631',host='127.0.0.1',database='message_system')
     crsr = sqlconn.cursor()
     try:
         while option != 2:
