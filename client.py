@@ -10,27 +10,44 @@ class Client:
         sizeofpword = sys.getsizeof(password)
         connection.send((sizeofuser).to_bytes(3,byteorder='big'))
         connection.send(user.encode())
-        connecetion.send((sizeofpword).to_bytes(3,byteorder='big'))
+        connection.send((sizeofpword).to_bytes(3,byteorder='big'))
         connection.send(password.encode())
-
+        response = int.from_bytes(conn.recv(28),byteorder='big')
+        while response >0:
+            password = input("You entered the wrong password. Please re-enter your password.")
+            sizeofpword = sys.getsizeof(password)
+            connection.send((sizeofpword).to_bytes(3,byteorder='big'))
+            connection.send(password.encode())
+            response = int.from_bytes(conn.recv(28),byteorder='big')
 
     def createAccount(self,connection):
         connection.send((1).to_bytes(1,byteorder='big'))
         user = input("Enter the user name.")
-        password = input("Enter your password.")
-        confirm = input("Confirm the password by entering it again.")
-        while confirm is not password:
-            confirm = input("That did not match the password entered. Please re-enter the password.")
         sizeofuser = sys.getsizeof(user)
-        sizeofpword = sys.getsizeof(password)
         connection.send((sizeofuser).to_bytes(3,byteorder='big'))
         connection.send(user.encode())
-        connecetion.send((sizeofpword).to_bytes(3,byteorder='big'))
+        response = int.from_bytes(connection.recv(28),byteorder='big')
+        while response >0:
+            user = input("That user name is already taken. Please enter a new one.")
+            sizeofuser = sys.getsizeof(user)
+            connection.send((sizeofuser).to_bytes(3,byteorder='big'))
+            connection.send(user.encode())
+            response = int.from_bytes(connection.recv(28),byteorder='big')
+        password = input("Enter your password.")
+        confirm = input("Confirm the password by entering it again.")
+        while confirm != password:
+            print('password is '+password+'confirm is '+confirm)
+            confirm = input("That did not match the password entered. Please re-enter the password.")
+
+        sizeofpword = sys.getsizeof(password)
+        connection.send((sizeofpword).to_bytes(3,byteorder='big'))
         connection.send(password.encode())
         print("You have created an account.")
 
     def connectToServer(self,hostname,port,ca_name,ca_file):
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        context.verify_mode = ssl.CERT_REQUIRED
+        context.check_hostname = True
         context.load_verify_locations(ca_file)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
         #with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
@@ -42,17 +59,17 @@ class Client:
             try:
                 print(ssock.server_hostname)
                 print(ssock.version())
-                if(ssock.version() != 'None'):
-                    return ssock
-                else:
-                    return None
+                cert = ssock.getpeercert()
+                print(cert)
+                print(ca_name)
+                ssl.match_hostname(cert,ca_name)
+                return ssock
             except:
                 print('something broke')#ssock.unwrap()
-
         except:
             sock.close()
 
-    def printOnlineList(connection):
+    def printOnlineList(self,connection):
         print("The users online are :")
 
     def __init__(self):

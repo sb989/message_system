@@ -3,24 +3,39 @@ import ssl
 import mysql.connector
 import threading
 import sys
+import base64
+import os
+from cryptography.fernet import Fernet
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+file = open('key.txt',r)
+privateKey = file.read()
+privateKey = privateKey.encode()
+file.close()
+
 def userLoop(conn_addr):
     conn = conn_addr[0]
     addr = conn_addr[1]
     option = 0
     sqlconn = mysql.connector.connect(user='root',password='Swiffty@05631',host='localhost',database='message_system')
     crsr = sqlconn.cursor()
-    createCommand = 'INSERT INTO user_info (Username,Pword,LoggedIn) VALUES(%s,%s,%s)'
+    createCommand = 'INSERT INTO user_info (Username,Pword,LoggedIn,Salt) VALUES(%s,%s,%s,%s)'
     loginCommand = 'SELECT Pword FROM user_info WHERE (Username = %s)'
     userExistCommand = 'SELECT COUNT(Username) FROM user_info WHERE (Username = %s)'
+    getSalt = 'SELECT Salt FROM user_info WHERE (Username = %s)'
     try:
         while option != 2:
             '''0 for nothing, 1 for create account, 2 for logging in, -1 for quitting'''
             option = int.from_bytes(conn.recv(28),byteorder='big')
             print(option)
-            if option == 1:
+            if option == 1:#creating account
                 sizeofuser = int.from_bytes(conn.recv(28),byteorder='big')
-                user = conn.recv(sizeofuser).decode()
-                crsr.execute(userExistCommand,(user,))
+                user = conn.recv(sizeofuser)
+                f = Fernet(privateKey)
+                encUser = f.encrypt(user)
+                crsr.execute(userExistCommand,(encUser.decode(),))
                 ans = crsr.fetchall()
                 print(ans)
                 print(ans[0][0])
@@ -32,24 +47,41 @@ def userLoop(conn_addr):
                     ans = crsr.fetchall()
                 conn.send((0).to_bytes(1,byteorder='big'))
                 sizeofpword = int.from_bytes(conn.recv(28),byteorder='big')
-                pword = conn.recv(sizeofpword).decode()
-                print("creating user "+user+" with password "+pword)
-                #command = 'INSERT INTO user_info VALUES('+user+','+pword+',OFFLINE,NULL);'
-                #print(command)
-                crsr.execute(createCommand,(user,pword,'OFFLINE'))
+                pword = conn.recv(sizeofpword)
+                print("creating user "+user.decode()+" with password "+pword.decode())
+                salt = os.urandom(16)
+                kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),length=32,salt=salt,iterations=100000,backend=default_backend())
+                key = base64.urlsafe_b64encode(kdf.derive(encUser))
+                f = Fernet(key)
+                encPword = f.encrypt(pword)
+                crsr.execute(createCommand,(encUser.decode(),encPword,'OFFLINE',salt))
                 sqlconn.commit()
             if option == -1:
                 break
         if option == 2:
             sizeofuser = int.from_bytes(conn.recv(28),byteorder='big')
-            user = conn.recv(sizeofuser).decode()
+            user = conn.recv(sizeofuser)
             sizeofpword = int.from_bytes(conn.recv(28),byteorder='big')
-            pword = conn.recv(sizeofpword).decode()
+            pword = conn.recv(sizeofpword)
             #command = 'SELECT Pword FROM user_info WHERE (Username='+user+');'
             #print(command)
-            crsr.execute(loginCommand,(user,))
-            ans = crsr.fetchall()
+            f = Fernet(privateKey)
+            encUser = f.encrypt(user)
+            crsr.execute(getSalt,(encUser.decode(),))
+            salt = (crsr.fetchall())[0][0]
+            crsr.execute(loginCommand,(encUser.decode(),))
+            ans = (crsr.fetchall())[0][0]
+            kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),length=32,salt=salt,iterations=100000,backend=default_backend())
+            key = base64.urlsafe_b64encode(kdf.derive(encUser))
+            f = Fernet(key)
+            ans = f.decrypt(ans)
             print(ans)
+            while ans != pword:
+                conn.send((1).to_bytes(1,byteorder='big'))
+                sizeofpword = int.from_bytes(conn.recv(28),byteorder='big')
+                pword = conn.recv(sizeofpword).decode()
+
+
     except ConnectionResetError:
         print('user disconnected')
 
