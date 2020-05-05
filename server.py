@@ -11,6 +11,7 @@ def userLoop(conn_addr):
     crsr = sqlconn.cursor()
     createCommand = 'INSERT INTO user_info (Username,Pword,LoggedIn) VALUES(%s,%s,%s)'
     loginCommand = 'SELECT Pword FROM user_info WHERE (Username = %s)'
+    userExistCommand = 'SELECT COUNT(Username) FROM user_info WHERE (Username = %s)'
     try:
         while option != 2:
             '''0 for nothing, 1 for create account, 2 for logging in, -1 for quitting'''
@@ -19,9 +20,16 @@ def userLoop(conn_addr):
             if option == 1:
                 sizeofuser = int.from_bytes(conn.recv(28),byteorder='big')
                 user = conn.recv(sizeofuser).decode()
+                crsr.execute(userExistCommand,(user,))
+                ans = crsr.fetchall()
+                while ans[0] > 0:
+                    conn.send((1).to_bytes(1,byteorder='big'))
+                    sizeofuser = int.from_bytes(conn.recv(28),byteorder='big')
+                    user = conn.recv(sizeofuser).decode()
+                    ans = crsr.fetchall()
+                conn.send((0).to_bytes(1,byteorder='big'))
                 sizeofpword = int.from_bytes(conn.recv(28),byteorder='big')
                 pword = conn.recv(sizeofpword).decode()
-                '''TO DO: check if the username is already taken'''
                 print("creating user "+user+" with password "+pword)
                 #command = 'INSERT INTO user_info VALUES('+user+','+pword+',OFFLINE,NULL);'
                 #print(command)
