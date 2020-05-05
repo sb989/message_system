@@ -46,12 +46,12 @@ def login(conn,crsr,sqlconn):
     loginCommand = 'SELECT Pword FROM user_info WHERE (Username = %s)'
     storePkey = 'UPDATE user_info SET PublicKey = %s WHERE (Username = %s) '
     getSalt = 'SELECT Salt FROM user_info WHERE (Username = %s)'
+
     sizeofuser = int.from_bytes(conn.recv(28),byteorder='big')
     user = conn.recv(sizeofuser)
     sizeofpword = int.from_bytes(conn.recv(28),byteorder='big')
     pword = conn.recv(sizeofpword)
-    #command = 'SELECT Pword FROM user_info WHERE (Username='+user+');'
-    #print(command)
+
     crsr.execute(getSalt,(user.decode(),))
     salt = (crsr.fetchall())[0][0]
     salt = bytes(salt)
@@ -61,14 +61,14 @@ def login(conn,crsr,sqlconn):
     crsr.execute(loginCommand,(user.decode(),))
     ans = (crsr.fetchall())[0][0]
     ans = ans.encode()
-    print(ans)
+    #print(ans)
     ans = bytes(ans)
 
     kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),length=32,salt=salt,iterations=100000,backend=default_backend())
     key = base64.urlsafe_b64encode(kdf.derive(user))
     f = Fernet(key)
     ans = f.decrypt(ans)
-    print(ans)
+    #print(ans)
     while ans != pword:
         conn.send((1).to_bytes(1,byteorder='big'))
         sizeofpword = int.from_bytes(conn.recv(28),byteorder='big')
@@ -105,6 +105,7 @@ def userLoop(conn_addr,q):
         if option == 2:#logggin into an account
             login(conn,crsr,sqlconn)
             online = True
+            print(online)
             while online:
                 useraction = int.from_bytes(conn.recv(28),byteorder='big')
                 if option==0:
@@ -117,6 +118,9 @@ def userLoop(conn_addr,q):
             crsr.execute(updateLoggedIn,('OFFLINE',user.decode(),))
             sqlconn.commit()
     except KeyboardInterrupt:
+        if online:
+            crsr.execute(updateLoggedIn,('OFFLINE',user.decode(),))
+            sqlconn.commit()
         sock.close()
         sys.exit(0)
         print('closing')
