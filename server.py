@@ -35,7 +35,7 @@ def userLoop(conn_addr):
             pword = conn.recv(sizeofpword).decode()
             #command = 'SELECT Pword FROM user_info WHERE (Username='+user+');'
             #print(command)
-            crsr.execute(loginCommand,(user))
+            crsr.execute(loginCommand,(user,))
             ans = crsr.fetchall()
             print(ans)
     except ConnectionResetError:
