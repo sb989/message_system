@@ -82,7 +82,7 @@ except:
     sock.close()
     sys.exit(0)
 while loop:
-    print(threading.active_count())
+    print('number of threads is '+threading.active_count())
     try:
         threading.Thread(target=userLoop,args=(ssock.accept(),)).start()
         #conn,addr = ssock.accept()
