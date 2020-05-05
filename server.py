@@ -33,9 +33,7 @@ def userLoop(conn_addr):
             if option == 1:#creating account
                 sizeofuser = int.from_bytes(conn.recv(28),byteorder='big')
                 user = conn.recv(sizeofuser)
-                f = Fernet(privateKey)
-                encUser = f.encrypt(user)
-                crsr.execute(userExistCommand,(encUser.decode(),))
+                crsr.execute(userExistCommand,(user.decode(),))
                 ans = crsr.fetchall()
                 print(ans)
                 print(ans[0][0])
@@ -51,7 +49,7 @@ def userLoop(conn_addr):
                 print("creating user "+user.decode()+" with password "+pword.decode())
                 salt = os.urandom(16)
                 kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),length=32,salt=salt,iterations=100000,backend=default_backend())
-                key = base64.urlsafe_b64encode(kdf.derive(encUser))
+                key = base64.urlsafe_b64encode(kdf.derive(user))
                 f = Fernet(key)
                 encPword = f.encrypt(pword)
                 print('salt is ')
@@ -67,16 +65,15 @@ def userLoop(conn_addr):
             pword = conn.recv(sizeofpword)
             #command = 'SELECT Pword FROM user_info WHERE (Username='+user+');'
             #print(command)
-            f = Fernet(privateKey)
-            encUser = f.encrypt(user)
-            crsr.execute(getSalt,(encUser.decode(),))
-            salt = crsr.fetchall()
+            crsr.execute(getSalt,(user.decode(),))
+            salt = (crsr.fetchall())[0][0]
             print('the salt returned is')
             print(salt)
-            crsr.execute(loginCommand,(encUser.decode(),))
-            ans = (crsr.fetchall())[0][0]
+            crsr.execute(loginCommand,(user.decode(),))
+            ans = crsr.fetchall()
+
             kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),length=32,salt=salt,iterations=100000,backend=default_backend())
-            key = base64.urlsafe_b64encode(kdf.derive(encUser))
+            key = base64.urlsafe_b64encode(kdf.derive(user))
             f = Fernet(key)
             ans = f.decrypt(ans)
             print(ans)
