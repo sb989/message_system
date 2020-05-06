@@ -136,6 +136,7 @@ def receiveMessage(conn,crsr,sqlconn,q,user):
         l.append(mess)
         l.append(publickey)
         q.put(l)
+        print(q.qsize())
 
 def sendMessage(conn,user,q):
     print('starting sendMessage thread')
@@ -147,7 +148,7 @@ def sendMessage(conn,user,q):
                 for i in range(q.qsize()):
                     x = q.get()
                     print(x)
-                    if x[0] == user:
+                    if x[0].decode() == user:
                         print('found a message for me')
                         pack = []
                         pack.append('message')
