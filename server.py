@@ -131,6 +131,7 @@ def receiveMessage(conn,crsr,sqlconn,q,user):
         crsr.execute(getOnlineUserPublicKey,(user,))
         publickey = crsr.fetchall()
         publickey = publickey[0][0]
+        print(publickey)
         l = []
         l.append(receiver)
         l.append(mess)
@@ -138,11 +139,11 @@ def receiveMessage(conn,crsr,sqlconn,q,user):
         q.put(l)
         print(q.qsize())
 
-def sendMessage(conn,user,q):
+def sendMessage(conn,user,q,lock):
     print('starting sendMessage thread')
     while True:
         try:
-            if not q.empty():
+            if not q.empty() and not lock.locked():
                 print('q is not empty rn')
                 print(q.qsize())
                 for i in range(q.qsize()):
@@ -190,18 +191,23 @@ def userLoop(conn_addr,q):
             online = True
             print(online)
             useraction = -1
-            sm = threading.Thread(target=sendMessage,args=(conn,user,q,))
+            lock = threading.Lock()
+            sm = threading.Thread(target=sendMessage,args=(conn,user,q,lock))
             sm.daemon = True
             sm.start()
             while online:
                 useraction = int.from_bytes(conn.recv(28),byteorder='big')
                 if useraction==0:
+                    lock.acquire()
                     returnOnlineUsers(conn,crsr,sqlconn)
                     useraction=-1
+                    lock.release()
                 if useraction==1:
                     print('receiving message')
+                    lock.acquire()
                     receiveMessage(conn,crsr,sqlconn,q,user)
                     useraction=-1
+                    lock.release()
 
     except (ConnectionResetError,BrokenPipeError):
         print('user disconnected')
