@@ -93,6 +93,7 @@ def login(conn,crsr,sqlconn):
     crsr.execute(storePkey,(pkey,user.decode(),))
     crsr.execute(updateLoggedIn,('ONLINE',user.decode(),))
     sqlconn.commit()
+    return user.decode()
 
 def returnOnlineUsers(conn,crsr,sqlconn):
     getUsersOnline = "SELECT Username FROM user_info WHERE (LoggedIn = 'ONLINE')"
@@ -114,6 +115,7 @@ def userLoop(conn_addr,q):
     crsr = sqlconn.cursor()
     updateLoggedIn = 'UPDATE user_info SET (LoggedIn = %s) WHERE (Username = %s) '
     online = False
+    user = ''
     try:
         while option != 2:
             '''0 for nothing, 1 for create account, 2 for logging in, -1 for quitting'''
@@ -124,7 +126,7 @@ def userLoop(conn_addr,q):
             if option == -1:
                 break
         if option == 2:#logggin into an account
-            login(conn,crsr,sqlconn)
+            user = login(conn,crsr,sqlconn)
             online = True
             print(online)
             useraction = -1
@@ -152,7 +154,7 @@ def userLoop(conn_addr,q):
         if online:
             crsr.execute(updateLoggedIn,('OFFLINE',user.decode(),))
             sqlconn.commit()
-            
+
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 context.load_cert_chain('certificate.pem', 'privkey.pem')
 loop = True
