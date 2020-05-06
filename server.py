@@ -189,7 +189,7 @@ def userLoop(conn_addr,q):
                     useraction=-1
                 if useraction==1:
                     print('receiving message')
-                    receiveMessage(conn,crsr,sqlconn,q)
+                    receiveMessage(conn,crsr,sqlconn,q,user)
                     useraction=-1
 
     except ConnectionResetError:
