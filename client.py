@@ -186,17 +186,24 @@ class Client:
         quit = False
         option = input("To print a list of users online press l, to send a user a message enter their username followed by the message inside quotes (eg. USERNAME 'MESSAGE'), to quit press q.")
         while not quit:
-            if option == 'l':
-                self.printOnlineList(connection)
-                option = input("To print a list of users online press l, to start chatting with a user online enter their user name, to quit press q.")
-            elif option == 'q':
+            try:
+                if option == 'l':
+                    self.printOnlineList(connection)
+                    option = input("To print a list of users online press l, to start chatting with a user online enter their user name, to quit press q.")
+                elif option == 'q':
+                    quit = True
+                else:
+                    s = option.split(" ",1)
+                    receiver = s[0]
+                    message = s[1]
+                    self.sendMessage(connection,receiver,message)
+                    option = input("To print a list of users online press l, to start chatting with a user online enter their user name, to quit press q.")
+            except KeyboardInterrupt:
                 quit = True
-            else:
-                s = option.split(" ",1)
-                receiver = s[0]
-                message = s[1]
-                self.sendMessage(connection,receiver,message)
-                option = input("To print a list of users online press l, to start chatting with a user online enter their user name, to quit press q.")
+            except Exception as exc:
+                print(type(exc))
+                print(exc.args)
+
 
     def messageReceiver(self,connection,q):
         done = False
@@ -216,6 +223,8 @@ class Client:
                     self.q.put(message.decode())
             except socket.timeout:
                 timeouttt =1
+            except KeyboardInterrupt:
+                done = True
                 #print('read time out. retrying.')
 
     def __init__(self):

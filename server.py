@@ -140,26 +140,30 @@ def receiveMessage(conn,crsr,sqlconn,q,user):
 def sendMessage(conn,user,q):
     print('starting sendMessage thread')
     while True:
-        if not q.empty():
-            print('q is not empty rn')
-            print(q.qsize())
-            for i in range(q.qsize()):
-                x = q.get()
-                print(x)
-                if x[0] == user:
-                    print('found a message for me')
-                    pack = []
-                    pack.append('message')
-                    pack.append(x[1])
-                    pack.append(x[2])
-                    s = str(pack)
-                    enc_s = s.encode()
-                    sizeofenc_s = sys.getsizeof(enc_s)
-                    conn.send((sizeofenc_s).to_bytes(3,byteorder='big'))
-                    conn.send(enc_s)
-                    break
-                q.put(x)
-
+        try:
+            if not q.empty():
+                print('q is not empty rn')
+                print(q.qsize())
+                for i in range(q.qsize()):
+                    x = q.get()
+                    print(x)
+                    if x[0] == user:
+                        print('found a message for me')
+                        pack = []
+                        pack.append('message')
+                        pack.append(x[1])
+                        pack.append(x[2])
+                        s = str(pack)
+                        enc_s = s.encode()
+                        sizeofenc_s = sys.getsizeof(enc_s)
+                        conn.send((sizeofenc_s).to_bytes(3,byteorder='big'))
+                        conn.send(enc_s)
+                        break
+                    q.put(x)
+        except Exception as exc:
+            print(type(exc))
+            print(exc.args)
+            break
 
 
 def userLoop(conn_addr,q):
