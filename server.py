@@ -189,7 +189,9 @@ def userLoop(conn_addr,q):
             online = True
             print(online)
             useraction = -1
-            threading.Thread(target=sendMessage,args=(conn,user,q,)).start()
+            sm = threading.Thread(target=sendMessage,args=(conn,user,q,))
+            sm.daemon = True
+            sm.start()
             while online:
                 useraction = int.from_bytes(conn.recv(28),byteorder='big')
                 if useraction==0:
@@ -203,11 +205,13 @@ def userLoop(conn_addr,q):
     except (ConnectionResetError,BrokenPipeError):
         print('user disconnected')
         if online:
+            sm.join()
             crsr.execute(updateLoggedIn,('OFFLINE',user,))
             sqlconn.commit()
 
     except KeyboardInterrupt:
         if online:
+            sm.join()
             crsr.execute(updateLoggedIn,('OFFLINE',user,))
             sqlconn.commit()
         sock.close()
@@ -217,6 +221,7 @@ def userLoop(conn_addr,q):
         print(type(exc))
         print(exc.args)
         if online:
+            sm.join()
             crsr.execute(updateLoggedIn,('OFFLINE',user,))
             sqlconn.commit()
 
@@ -252,13 +257,19 @@ while loop:
     print('number of threads is ')
     print(threading.active_count())
     try:
-        threading.Thread(target=userLoop,args=(ssock.accept(),q)).start()
+        ul = threading.Thread(target=userLoop,args=(ssock.accept(),q))
+        ul.daemon = True
+        ul.start()
         #conn,addr = ssock.accept()
     except KeyboardInterrupt:
+        ul.join()
         sock.close()
         sys.exit(0)
         print('closing')
     except:
+        ul.join()
+        sock.close()
+        sys.exit(0)
         print("thread or wrapping broke")
 '''with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
     sock.bind(('0.0.0.0', 8443))

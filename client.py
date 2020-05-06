@@ -201,6 +201,7 @@ class Client:
             except KeyboardInterrupt:
                 quit = True
             except Exception as exc:
+                quit = True
                 print(type(exc))
                 print(exc.args)
 
@@ -225,6 +226,10 @@ class Client:
                 timeouttt =1
             except KeyboardInterrupt:
                 done = True
+            except Exception as exc:
+                done = True
+                print(type(exc))
+                print(exc.args)
                 #print('read time out. retrying.')
 
     def __init__(self):
@@ -241,6 +246,10 @@ class Client:
             quit = self.loginOrCreateAccountPrompt(connection)
 
         if not quit:
-            threading.Thread(target=self.messageReceiver,args=(connection,self.q)).start()
+            mr = threading.Thread(target=self.messageReceiver,args=(connection,self.q))
+            mr.daemon = True
+            mr.start()
             self.messagePrompt(connection)
+            mr.join
+
 Client()
