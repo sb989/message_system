@@ -215,8 +215,7 @@ class Client:
                     print(message.decode())
                     self.q.put(message.decode())
             except socket.timeout:
-                e = 1
-                #print('read time out. retrying.')
+                print('read time out. retrying.')
 
     def __init__(self):
         quit = False

@@ -204,8 +204,9 @@ def userLoop(conn_addr,q):
         sock.close()
         sys.exit(0)
         print('closing')
-    except:
-        print('user disconnected')
+    except Exception as exc:
+        print(type(exc))
+        print(exc.args)
         if online:
             crsr.execute(updateLoggedIn,('OFFLINE',user,))
             sqlconn.commit()
