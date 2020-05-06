@@ -126,8 +126,10 @@ def receiveMessage(conn,crsr,sqlconn,q,user):
         conn.send('0'.encode())
     else:
         print(key[0])
-        conn.send((sys.getsizeof(key[0])).to_bytes(3,byteorder='big'))
-        conn.send(key[0])
+        key = key[0][0]
+        key = bytes(key)
+        conn.send((sys.getsizeof(key)).to_bytes(3,byteorder='big'))
+        conn.send(key)
         print('valid receiver')
         sizeofmess = int.from_bytes(conn.recv(28),byteorder='big')
         print(sizeofmess)
