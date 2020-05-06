@@ -132,22 +132,26 @@ def receiveMessage(conn,crsr,sqlconn,q,user):
         publickey = crsr.fetchall()
         publickey = publickey[0][0]
         l = []
-        l[0] = receiver
-        l[1] = mess
-        l[2] = publickey
+        l.append(receiver)
+        l.append(mess)
+        l.append(publickey)
         q.put(l)
 
 def sendMessage(conn,user,q):
+    print('starting sendMessage thread')
     while True:
         if not q.empty():
+            print('q is not empty rn')
+            print(q.qrange())
             for i in range(q.qrange()):
                 x = q.get()
+                print(x)
                 if x[0] == user:
                     print('found a message for me')
                     pack = []
-                    pack[0] = 'message'
-                    pack[1] = x[1]
-                    pack[2] = x[2]
+                    pack.append('message')
+                    pack.append(x[1])
+                    pack.append(x[2])
                     s = str(pack)
                     enc_s = s.encode()
                     sizeofenc_s = sys.getsizeof(enc_s)
