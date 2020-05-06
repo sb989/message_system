@@ -85,7 +85,7 @@ def login(conn,crsr,sqlconn):
     while ans != pword:
         conn.send((1).to_bytes(1,byteorder='big'))
         sizeofpword = int.from_bytes(conn.recv(28),byteorder='big')
-        pword = conn.recv(sizeofpword).decode()
+        pword = conn.recv(sizeofpword)
         print(pword)
     conn.send((0).to_bytes(1,byteorder='big'))
     sizeofpkey = int.from_bytes(conn.recv(28),byteorder='big')
@@ -147,7 +147,12 @@ def userLoop(conn_addr,q):
         sock.close()
         sys.exit(0)
         print('closing')
-
+    except:
+        print('user disconnected')
+        if online:
+            crsr.execute(updateLoggedIn,('OFFLINE',user.decode(),))
+            sqlconn.commit()
+            
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 context.load_cert_chain('certificate.pem', 'privkey.pem')
 loop = True
