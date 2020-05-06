@@ -144,7 +144,7 @@ class Client:
         while(self.q.empty()):
             i = 1
             #print('q is empty. waiting...')
-        users = self.q.get()
+        users = self.q.get().decode()
         #users = connection.recv(sizeof)
         #users = users.decode()
         users = eval(users)
@@ -168,8 +168,8 @@ class Client:
                     plaintext = box.decrypt(mess)
                     print(mess.decode())
                 else:
-                    print(message.decode())
-                    self.q.put(message.decode())
+                    print(message)
+                    self.q.put(message)
             except socket.timeout:
                 timeouttt =1
             except KeyboardInterrupt:
@@ -196,6 +196,7 @@ class Client:
         elif(response =='1'):
             print('The receiver entered does not exist')
         else:
+            print(response)
             response = response.encode()
             format = self.username+':'
             message = format+message
