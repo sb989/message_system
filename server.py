@@ -111,14 +111,17 @@ def receiveMessage(conn,crsr,sqlconn,q,user):
     userExistCommand = 'SELECT COUNT(Username) FROM user_info WHERE (Username = %s)'
     sizeofreceiver = int.from_bytes(conn.recv(28),byteorder='big')
     receiver = conn.recv(sizeofreceiver)
+    print(receiver.decode())
     crsr.execute(userExistCommand,(receiver.decode(),))
     amount = crsr.fetchall()
     if amount[0][0] == 0:
+        print('user does not exist')
         conn.send((sys.getsizeof('1')).to_bytes(1,byteorder='big'))
         conn.send('1'.encode())
     crsr.execute(getOnlineUserPublicKey,(receiver,))
     key = crsr.fetchall()
     if not key[0]:
+        print('user is not online')
         conn.send((sys.getsizeof('0')).to_bytes(1,byteorder='big'))
         conn.send('0'.encode())
     else:
