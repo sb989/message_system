@@ -3,8 +3,14 @@ import ssl
 import sys
 import nacl.utils
 from nacl.public import PrivateKey, Box
+from queue import Queue
+import threading
 
 class Client:
+    privateKey = b''
+    publicKey = b''
+    q = Queue()
+    username = ''
     def login(self,connection):
         connection.send((2).to_bytes(1,byteorder='big'))
         user = input("Enter your username.")
@@ -41,11 +47,16 @@ class Client:
         sizeofpkclient = sys.getsizeof(pkclient)
         connection.send((sizeofpkclient).to_bytes(3,byteorder='big'))
         connection.send(pkclient)
+        self.privateKey = bytes(skclient)
+        self.publicKey = pkclient
+        self.username = user
         return False
 
     def createAccount(self,connection):
         connection.send((1).to_bytes(1,byteorder='big'))
-        user = input("Enter the user name.")
+        user = input("Enter the user name. It must be between 8 and 40 characters.")
+        while len(user)<8 or len(user)>40:
+            user = input("The user name entered does not meet the length requirements. Please enter a user name between 8 and 40 characters.")
         sizeofuser = sys.getsizeof(user)
         connection.send((sizeofuser).to_bytes(3,byteorder='big'))
         connection.send(user.encode())
@@ -56,7 +67,9 @@ class Client:
             connection.send((sizeofuser).to_bytes(3,byteorder='big'))
             connection.send(user.encode())
             response = int.from_bytes(connection.recv(28),byteorder='big')
-        password = input("Enter your password.")
+        password = input("Enter your password. It must be between 8 and 40 characters and contain uppercase letters, lowercase letters, numbers, and special characters (!,@,#,%, etc.). It cannot contain spaces.")
+        while len(password)<8 or len(password)>40 or not any(str.isdigit(c) for c in password) or not any(str.islower(c) for c in password) or not any(str.isupper(c) for c in password) or not any(c for c in password if (not c.isalnum() and not c.isspace())) or any(c for c in password if(c.isspace())):
+            password = input("The password entered did not meet the requirements. Please enter a new password.")
         confirm = input("Confirm the password by entering it again.")
         while confirm != password:
             print('password is '+password+'confirm is '+confirm)
@@ -92,18 +105,6 @@ class Client:
         except:
             sock.close()
 
-    def printOnlineList(self,connection):
-        connection.send((0).to_bytes(1,byteorder='big'))
-        sizeof = int.from_bytes(connection.recv(28),byteorder='big')
-        print(sizeof)
-        users = connection.recv(sizeof)
-        print(users)
-        users = users.decode()
-        print(users)
-        users = eval
-        print("The users online are :")
-        print(users)
-
 
     def connectionPrompt(self,hostname,port,ca_name,ca_file):
         connection = self.connectToServer(hostname,port,ca_name,ca_file)
@@ -134,6 +135,53 @@ class Client:
                 option = input("That is not a valid input. Please press l to log in, r to create an account, or q to quit.")
         return quit
 
+    def printOnlineList(self,connection):
+        connection.send((0).to_bytes(1,byteorder='big'))
+        #sizeof = int.from_bytes(connection.recv(28),byteorder='big')
+        #print(sizeof)
+        if(self.q.empty()):
+            print('q is empty. waiting...')
+        while(self.q.empty()):
+            i = 1
+            #print('q is empty. waiting...')
+        users = self.q.get()
+        #users = connection.recv(sizeof)
+        #users = users.decode()
+        users = eval(users)
+        print("The users online are :")
+        for user in users:
+            print(user[0])
+        #print(users)
+        #print(type(users))
+
+    def sendMessage(self,connection,receiver,message):
+        connection.send((1).to_bytes(1,byteorder='big'))
+        sizeofreceiver = sys.getsizeof(receiver)
+        connection.send((sizeofreceiver).to_bytes(3,byteorder='big'))
+        connection.send(receiver.encode())
+        #sizeofresponse = int.from_bytes(connection.recv(28),byteorder='big')
+        if(self.q.empty()):
+            print('q is empty. waiting...')
+        while(self.q.empty()):
+            waiting = 1
+        response = self.q.get()
+        #response = connection.recv(sizeofresponse)
+        if(response == '0'):
+            print('The receiver entered is not online')
+        elif(response =='1'):
+            print('The receiver entered does not exist')
+        else:
+            response = response.encode()
+            format = self.username+':'
+            message = format+message
+            box = Box(self.privateKey,response)
+            enc = box.encrypt(message)
+            enc = bytes(enc)
+            sizeofenc = sys.getsizeof(enc)
+            connection.send((sizeofenc).to_bytes(3,byteorder='big'))
+            connection.send(enc)
+
+
     def messagePrompt(self,connection):
         quit = False
         option = input("To print a list of users online press l, to send a user a message enter their username followed by the message inside quotes (eg. USERNAME 'MESSAGE'), to quit press q.")
@@ -144,7 +192,31 @@ class Client:
             elif option == 'q':
                 quit = True
             else:
-                print(option)
+                s = option.split(" ",1)
+                receiver = s[0]
+                message = s[1]
+                self.sendMessage(connection,receiver,message)
+                option = input("To print a list of users online press l, to start chatting with a user online enter their user name, to quit press q.")
+
+    def messageReceiver(self,connection,q):
+        done = False
+        while not done:
+            try:
+                sizeofmessage = int.from_bytes(connection.recv(28),byteorder='big')
+                message = connection.recv(sizeofmessage)
+                if len(message.decode()) > 10 and message[0:10] == "['message'":
+                    l = eval(message.decode())
+                    key = l[2]
+                    mess = l[1]
+                    box = Box(self.privateKey,key)
+                    plaintext = box.decrypt(mess)
+                    print(mess.decode())
+                else:
+                    print(message.decode())
+                    self.q.put(message.decode())
+            except socket.timeout:
+                e = 1
+                #print('read time out. retrying.')
 
     def __init__(self):
         quit = False
@@ -160,5 +232,6 @@ class Client:
             quit = self.loginOrCreateAccountPrompt(connection)
 
         if not quit:
+            threading.Thread(target=self.messageReceiver,args=(connection,self.q)).start()
             self.messagePrompt(connection)
 Client()

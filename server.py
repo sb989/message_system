@@ -106,6 +106,54 @@ def returnOnlineUsers(conn,crsr,sqlconn):
     conn.send(sizeofusers.to_bytes(3,byteorder='big'))
     conn.send(users)
 
+def receiveMessage(conn,crsr,sqlconn,q,user):
+    getOnlineUserPublicKey = "SELECT PublicKey FROM user_info WHERE (LoggedIn = 'ONLINE' AND Username = %s)"
+    userExistCommand = 'SELECT COUNT(Username) FROM user_info WHERE (Username = %s)'
+    sizeofreceiver = int.from_bytes(conn.recv(28),byteorder='big')
+    receiver = conn.recv(sizeofreceiver)
+    crsr.execute(userExistCommand,(receiver.decode(),))
+    amount = crsr.fetchall()
+    if amount[0][0] == 0:
+        conn.send((sys.getsizeof('1')).to_bytes(1,byteorder='big'))
+        conn.send('1'.encode())
+    crsr.execute(getOnlineUserPublicKey,(receiver,))
+    key = crsr.fetchall()
+    if not key[0]:
+        conn.send((sys.getsizeof('0')).to_bytes(1,byteorder='big'))
+        conn.send('0'.encode())
+    else:
+        print('valid receiver')
+        sizeofmess = int.from_bytes(conn.recv(28),byteorder='big')
+        mess = conn.recv(sizeofmess)
+        crsr.execute(getOnlineUserPublicKey,(user,))
+        publickey = crsr.fetchall()
+        publickey = publickey[0][0]
+        l = []
+        l[0] = receiver
+        l[1] = mess
+        l[2] = publickey
+        q.put(l)
+
+def sendMessage(conn,user,q):
+    while True:
+        if not q.empty():
+            for i in range(q.qrange()):
+                x = q.get()
+                if x[0] == user:
+                    print('found a message for me')
+                    pack = []
+                    pack[0] = 'message'
+                    pack[1] = x[1]
+                    pack[2] = x[2]
+                    s = str(pack)
+                    enc_s = s.encode()
+                    sizeofenc_s = sys.getsizeof(enc_s)
+                    conn.send((sizeofenc_s).to_bytes(3,byteorder='big'))
+                    conn.send(enc_s)
+                    break
+                q.put(x)
+
+
 
 def userLoop(conn_addr,q):
     conn = conn_addr[0]
@@ -130,12 +178,16 @@ def userLoop(conn_addr,q):
             online = True
             print(online)
             useraction = -1
+            threading.Thread(target=sendMessage,args=(conn,user,q,)).start()
             while online:
                 useraction = int.from_bytes(conn.recv(28),byteorder='big')
                 if useraction==0:
                     returnOnlineUsers(conn,crsr,sqlconn)
                     useraction=-1
-
+                if useraction==1:
+                    print('receiving message')
+                    receiveMessage(conn,crsr,sqlconn,q)
+                    useraction=-1
 
     except ConnectionResetError:
         print('user disconnected')
