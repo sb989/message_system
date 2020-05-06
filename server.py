@@ -140,11 +140,11 @@ def userLoop(conn_addr,q):
     except ConnectionResetError:
         print('user disconnected')
         if online:
-            crsr.execute(updateLoggedIn,('OFFLINE',user.decode(),))
+            crsr.execute(updateLoggedIn,('OFFLINE',user,))
             sqlconn.commit()
     except KeyboardInterrupt:
         if online:
-            crsr.execute(updateLoggedIn,('OFFLINE',user.decode(),))
+            crsr.execute(updateLoggedIn,('OFFLINE',user,))
             sqlconn.commit()
         sock.close()
         sys.exit(0)
@@ -152,7 +152,7 @@ def userLoop(conn_addr,q):
     except:
         print('user disconnected')
         if online:
-            crsr.execute(updateLoggedIn,('OFFLINE',user.decode(),))
+            crsr.execute(updateLoggedIn,('OFFLINE',user,))
             sqlconn.commit()
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
