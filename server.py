@@ -142,8 +142,8 @@ def sendMessage(conn,user,q):
     while True:
         if not q.empty():
             print('q is not empty rn')
-            print(q.qrange())
-            for i in range(q.qrange()):
+            print(q.qsize())
+            for i in range(q.qsize()):
                 x = q.get()
                 print(x)
                 if x[0] == user:
@@ -196,11 +196,12 @@ def userLoop(conn_addr,q):
                     receiveMessage(conn,crsr,sqlconn,q,user)
                     useraction=-1
 
-    except ConnectionResetError:
+    except (ConnectionResetError,BrokenPipeError):
         print('user disconnected')
         if online:
             crsr.execute(updateLoggedIn,('OFFLINE',user,))
             sqlconn.commit()
+
     except KeyboardInterrupt:
         if online:
             crsr.execute(updateLoggedIn,('OFFLINE',user,))
