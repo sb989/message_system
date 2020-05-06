@@ -154,6 +154,31 @@ class Client:
         #print(users)
         #print(type(users))
 
+    def messageReceiver(self,connection,q):
+        done = False
+        while not done:
+            try:
+                sizeofmessage = int.from_bytes(connection.recv(28),byteorder='big')
+                message = connection.recv(sizeofmessage)
+                if len(message.decode()) > 10 and message[0:10] == "['message'":
+                    l = eval(message.decode())
+                    key = l[2]
+                    mess = l[1]
+                    box = Box(self.privateKey,key)
+                    plaintext = box.decrypt(mess)
+                    print(mess.decode())
+                else:
+                    print(message.decode())
+                    self.q.put(message.decode())
+            except socket.timeout:
+                timeouttt =1
+            except KeyboardInterrupt:
+                done = True
+            except Exception as exc:
+                done = True
+                print(type(exc))
+                print(exc.args)
+                #print('read time out. retrying.')
     def sendMessage(self,connection,receiver,message):
         connection.send((1).to_bytes(1,byteorder='big'))
         sizeofreceiver = sys.getsizeof(receiver)
@@ -206,31 +231,7 @@ class Client:
                 print(exc.args)
 
 
-    def messageReceiver(self,connection,q):
-        done = False
-        while not done:
-            try:
-                sizeofmessage = int.from_bytes(connection.recv(28),byteorder='big')
-                message = connection.recv(sizeofmessage)
-                if len(message.decode()) > 10 and message[0:10] == "['message'":
-                    l = eval(message.decode())
-                    key = l[2]
-                    mess = l[1]
-                    box = Box(self.privateKey,key)
-                    plaintext = box.decrypt(mess)
-                    print(mess.decode())
-                else:
-                    print(message.decode())
-                    self.q.put(message.decode())
-            except socket.timeout:
-                timeouttt =1
-            except KeyboardInterrupt:
-                done = True
-            except Exception as exc:
-                done = True
-                print(type(exc))
-                print(exc.args)
-                #print('read time out. retrying.')
+
 
     def __init__(self):
         quit = False

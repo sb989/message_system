@@ -125,9 +125,14 @@ def receiveMessage(conn,crsr,sqlconn,q,user):
         conn.send((sys.getsizeof('0')).to_bytes(1,byteorder='big'))
         conn.send('0'.encode())
     else:
+        print(key[0])
+        conn.send((sys.getsizeof(key[0])).to_bytes(3,byteorder='big'))
+        conn.send(key[0])
         print('valid receiver')
         sizeofmess = int.from_bytes(conn.recv(28),byteorder='big')
+        print(sizeofmess)
         mess = conn.recv(sizeofmess)
+        print(mess)
         crsr.execute(getOnlineUserPublicKey,(user,))
         publickey = crsr.fetchall()
         publickey = publickey[0][0]
@@ -278,9 +283,3 @@ while loop:
         sock.close()
         sys.exit(0)
         print("thread or wrapping broke")
-'''with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
-    sock.bind(('0.0.0.0', 8443))
-    sock.listen(5)
-    with context.wrap_socket(sock, server_side=True) as ssock:
-        conn, addr = ssock.accept()
-'''
