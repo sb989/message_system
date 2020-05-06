@@ -43,7 +43,7 @@ def createAccount(conn,crsr,sqlconn):
 
 def login(conn,crsr,sqlconn):
     updateLoggedIn = 'UPDATE user_info SET LoggedIn = %s WHERE (Username = %s) '
-    loginCommand = 'SELECT Pword FROM user_info WHERE (Username = %s)'
+    retreivePwordCommand = 'SELECT Pword FROM user_info WHERE (Username = %s)'
     storePkey = 'UPDATE user_info SET PublicKey = %s WHERE (Username = %s) '
     getSalt = 'SELECT Salt FROM user_info WHERE (Username = %s)'
     userExistCommand = 'SELECT COUNT(Username) FROM user_info WHERE (Username = %s)'
@@ -53,10 +53,8 @@ def login(conn,crsr,sqlconn):
     crsr.execute(userExistCommand,(user,))
     ans = crsr.fetchall()
     print('the amount of usernames that match that are ')
-    print(ans)
-    print(ans[0][0])
+
     while ans[0][0] == 0:
-        print('me')
         conn.send((1).to_bytes(1,byteorder='big'))
         sizeofuser = int.from_bytes(conn.recv(28),byteorder='big')
         user = conn.recv(sizeofuser)
@@ -73,7 +71,7 @@ def login(conn,crsr,sqlconn):
     print('the salt returned is')
     print(salt)
     print(type(salt))
-    crsr.execute(loginCommand,(user.decode(),))
+    crsr.execute(retreivePwordCommand,(user.decode(),))
     ans = (crsr.fetchall())[0][0]
     ans = ans.encode()
     #print(ans)
@@ -83,11 +81,12 @@ def login(conn,crsr,sqlconn):
     key = base64.urlsafe_b64encode(kdf.derive(user))
     f = Fernet(key)
     ans = f.decrypt(ans)
-    #print(ans)
+    print(ans)
     while ans != pword:
         conn.send((1).to_bytes(1,byteorder='big'))
         sizeofpword = int.from_bytes(conn.recv(28),byteorder='big')
         pword = conn.recv(sizeofpword).decode()
+        print(pword)
     conn.send((0).to_bytes(1,byteorder='big'))
     sizeofpkey = int.from_bytes(conn.recv(28),byteorder='big')
     pkey = conn.recv(sizeofpkey)
