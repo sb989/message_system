@@ -42,7 +42,7 @@ def createAccount(conn,crsr,sqlconn):
     sqlconn.commit()
 
 def login(conn,crsr,sqlconn):
-    updateLoggedIn = 'UPDATE user_info SET LoggedIn = %s WHERE (Username = %s) '
+    updateLoggedIn = 'UPDATE user_info SET LoggedIn = %s WHERE (Username = %s)'
     retreivePwordCommand = 'SELECT Pword FROM user_info WHERE (Username = %s)'
     storePkey = 'UPDATE user_info SET PublicKey = %s WHERE (Username = %s) '
     getSalt = 'SELECT Salt FROM user_info WHERE (Username = %s)'
@@ -113,7 +113,7 @@ def userLoop(conn_addr,q):
     option = 0
     sqlconn = mysql.connector.connect(user='root',password='Swiffty@05631',host='localhost',database='message_system')
     crsr = sqlconn.cursor()
-    updateLoggedIn = 'UPDATE user_info SET (LoggedIn = %s) WHERE (Username = %s) '
+    updateLoggedIn = 'UPDATE user_info SET LoggedIn = %s WHERE (Username = %s)'
     online = False
     user = ''
     try:
