@@ -189,7 +189,7 @@ def userLoop(conn_addr,q):
         while option != 2:
             '''0 for nothing, 1 for create account, 2 for logging in, -1 for quitting'''
             option = int.from_bytes(conn.recv(28),byteorder='big')
-            print(option)
+            print('option',option,'\n')
             if option == 1:#creating account
                 createAccount(conn,crsr,sqlconn)
             if option == -1:

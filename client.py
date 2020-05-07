@@ -161,24 +161,27 @@ class Client:
         while not done:
             try:
                 sizeofmessage = int.from_bytes(connection.recv(28),byteorder='big')
-                print(sizeofmessage)
+                #print(sizeofmessage)
                 message = connection.recv(sizeofmessage)
-                print(message)
-                if len(message.decode()) > 10 and message[0:10] == "['message'":
+                #print(message)
+                if len(message.decode()) > 10 and (message.decode())[0:10] == "['message'":
                     lock.acquire()
-                    print('received a message')
-                    print(message.decode())
+                    #print('received a message')
+                    #print(message.decode())
                     l = eval(message.decode())
-                    l = l.decode()
-                    print(l)
+                    #print(l,'\n')
+                    #l = l.decode()
+                    #print(l)
                     key = l[2]
                     mess = l[1]
-                    print(mess)
-                    print(key)
+                    #print('mess',mess,'\n')
+                    #print('key',key,'\n')
+                    key = bytes(key)
                     prkey = nacl.public.PrivateKey(self.privateKey)
                     pukey = nacl.public.PublicKey(key)
                     box = Box(prkey,pukey)
                     plaintext = box.decrypt(mess)
+                    plaintext = plaintext.decode()
                     print(plaintext)
                     lock.release()
                 else:
@@ -210,8 +213,8 @@ class Client:
                 waiting = 1
             response = self.q.get()
             #response = connection.recv(sizeofresponse)
-            print('response is')
-            print(response)
+            #print('response is')
+            #print(response)
             try:
                 if(response.decode() == '0'):
                     print('The receiver entered is not online')
@@ -223,7 +226,7 @@ class Client:
                 pass
             finally:
                 try:
-                    print('encrypting the message to send it')
+                    #print('encrypting the message to send it')
                     format = self.username+':'
                     message = format+message
                     prkey = nacl.public.PrivateKey(self.privateKey)
@@ -234,7 +237,7 @@ class Client:
                     sizeofenc = sys.getsizeof(enc)
                     connection.send((sizeofenc).to_bytes(3,byteorder='big'))
                     connection.send(enc)
-                    print('finisehd sending message')
+                    #print('finisehd sending message')
                 except Exception as exc:
                     print(type(exc))
                     print(exc.args)
@@ -247,7 +250,7 @@ class Client:
         quit = False
         while lock.locked():
             wait = 1
-        option = input("To print a list of users online press l, to send a user a message enter their username followed by the message inside quotes (eg. USERNAME 'MESSAGE'), to quit press q.")
+        option = input("To print a list of users online press l, to send a user a message enter their username followed by the message(eg. USERNAME MESSAGE), to quit press q.")
         while not quit:
             try:
                 if option == 'l':
