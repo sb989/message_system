@@ -6,6 +6,7 @@ from nacl.public import PrivateKey, Box
 from queue import Queue
 import threading
 from threading import Lock
+from requests import get
 
 lock = Lock()
 class Client:
@@ -51,6 +52,7 @@ class Client:
         connection.send(pkclient)
         self.privateKey = bytes(skclient)
         self.publicKey = pkclient
+        print('the public key i sent to the server is ',pkclient)
         self.username = user
         return False
 
@@ -139,22 +141,17 @@ class Client:
 
     def printOnlineList(self,connection):
         connection.send((0).to_bytes(1,byteorder='big'))
-        #sizeof = int.from_bytes(connection.recv(28),byteorder='big')
-        #print(sizeof)
-        #if(self.q.empty()):
-        #    print('q is empty. waiting...')
+
         while(self.q.empty()):
             i = 1
             #print('q is empty. waiting...')
         users = self.q.get().decode()
-        #users = connection.recv(sizeof)
-        #users = users.decode()
+
         users = eval(users)
         print("The users online are :")
         for user in users:
             print(user[0])
-        #print(users)
-        #print(type(users))
+
 
     def messageReceiver(self,connection,q):
         done = False
@@ -166,23 +163,25 @@ class Client:
                 #print(message)
                 if len(message.decode()) > 10 and (message.decode())[0:10] == "['message'":
                     lock.acquire()
-                    #print('received a message')
-                    #print(message.decode())
+                    print('\nreceived a message\n')
+                    print('The message in byte form is ',message,'\n')
+                    print('\nThe message in string form is ,'message.decode(),'\n')
                     l = eval(message.decode())
                     #print(l,'\n')
                     #l = l.decode()
                     #print(l)
                     key = l[2]
                     mess = l[1]
-                    #print('mess',mess,'\n')
-                    #print('key',key,'\n')
+
+                    print('\nThe encrypted message is ',mess,'\n')
                     key = bytes(key)
+                    print('\nThe senders public key is ',key,'\n')
                     prkey = nacl.public.PrivateKey(self.privateKey)
                     pukey = nacl.public.PublicKey(key)
                     box = Box(prkey,pukey)
                     plaintext = box.decrypt(mess)
                     plaintext = plaintext.decode()
-                    print(plaintext)
+                    print('The plaintext is ',plaintext)
                     lock.release()
                 else:
                     #print(message)
@@ -286,8 +285,11 @@ class Client:
 
     def __init__(self):
         quit = False
-        hostname = '192.168.1.157'
-        #hostname = '71.255.90.82'
+        hostname = '71.255.90.82'
+        ip = get('https://api.ipify.org').text
+        if ip ==  hostname:
+            hostname = '192.168.1.157'
+
         port = 8443
 
         connection = self.connectionPrompt(hostname,port,'NADGE','certificate.pem')
