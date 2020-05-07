@@ -5,7 +5,9 @@ import nacl.utils
 from nacl.public import PrivateKey, Box
 from queue import Queue
 import threading
+from threading import Lock
 
+lock = Lock()
 class Client:
     privateKey = b''
     publicKey = b''
@@ -139,8 +141,8 @@ class Client:
         connection.send((0).to_bytes(1,byteorder='big'))
         #sizeof = int.from_bytes(connection.recv(28),byteorder='big')
         #print(sizeof)
-        if(self.q.empty()):
-            print('q is empty. waiting...')
+        #if(self.q.empty()):
+        #    print('q is empty. waiting...')
         while(self.q.empty()):
             i = 1
             #print('q is empty. waiting...')
@@ -159,17 +161,32 @@ class Client:
         while not done:
             try:
                 sizeofmessage = int.from_bytes(connection.recv(28),byteorder='big')
+                print(sizeofmessage)
                 message = connection.recv(sizeofmessage)
+                print(message)
                 if len(message.decode()) > 10 and message[0:10] == "['message'":
+                    lock.acquire()
+                    print('received a message')
+                    print(message.decode())
                     l = eval(message.decode())
+                    l = l.decode()
+                    print(l)
                     key = l[2]
                     mess = l[1]
-                    box = Box(self.privateKey,key)
+                    print(mess)
+                    print(key)
+                    prkey = nacl.public.PrivateKey(self.privateKey)
+                    pukey = nacl.public.PublicKey(key)
+                    box = Box(prkey,pukey)
                     plaintext = box.decrypt(mess)
-                    print(mess.decode())
+                    print(plaintext)
+                    lock.release()
                 else:
-                    print(message)
+                    #print(message)
                     self.q.put(message)
+            except UnicodeDecodeError:
+                #print(message)
+                self.q.put(message)
             except socket.timeout:
                 timeouttt =1
             except KeyboardInterrupt:
@@ -178,6 +195,7 @@ class Client:
                 done = True
                 print(type(exc))
                 print(exc.args)
+                print('messageReceiver')
                 #print('read time out. retrying.')
     def sendMessage(self,connection,receiver,message):
         connection.send((1).to_bytes(1,byteorder='big'))
@@ -185,44 +203,63 @@ class Client:
         connection.send((sizeofreceiver).to_bytes(3,byteorder='big'))
         connection.send(receiver.encode())
         #sizeofresponse = int.from_bytes(connection.recv(28),byteorder='big')
-        if(self.q.empty()):
-            print('q is empty. waiting...')
+        #if(self.q.empty()):
+        #    print('q is empty. waiting...')
         while(self.q.empty()):
             waiting = 1
         response = self.q.get()
         #response = connection.recv(sizeofresponse)
-        if(response == '0'):
+        print('response is')
+        print(response)
+        if(response.decode() == '0'):
             print('The receiver entered is not online')
-        elif(response =='1'):
+        elif(response.decode() =='1'):
             print('The receiver entered does not exist')
         else:
-            print(response)
-            response = response.encode()
-            format = self.username+':'
-            message = format+message
-            box = Box(self.privateKey,response)
-            enc = box.encrypt(message)
-            enc = bytes(enc)
-            sizeofenc = sys.getsizeof(enc)
-            connection.send((sizeofenc).to_bytes(3,byteorder='big'))
-            connection.send(enc)
-
-
+            try:
+                print('encrypting the message to send it')
+                format = self.username+':'
+                message = format+message
+                prkey = nacl.public.PrivateKey(self.privateKey)
+                pukey = nacl.public.PublicKey(response)
+                box = Box(prkey,pukey)
+                enc = box.encrypt(message.encode())
+                enc = bytes(enc)
+                sizeofenc = sys.getsizeof(enc)
+                connection.send((sizeofenc).to_bytes(3,byteorder='big'))
+                connection.send(enc)
+                print('finisehd sending message')
+            except Exception as exc:
+                print(type(exc))
+                print(exc.args)
+                print('sendMessage')
     def messagePrompt(self,connection):
         quit = False
+        while lock.locked():
+            wait = 1
         option = input("To print a list of users online press l, to send a user a message enter their username followed by the message inside quotes (eg. USERNAME 'MESSAGE'), to quit press q.")
         while not quit:
             try:
                 if option == 'l':
                     self.printOnlineList(connection)
+                    while lock.locked():
+                        wait = 1
                     option = input("To print a list of users online press l, to start chatting with a user online enter their user name, to quit press q.")
                 elif option == 'q':
                     quit = True
                 else:
                     s = option.split(" ",1)
+                    if len(s) != 2:
+                        print('Invalid Input.')
+                        while lock.locked():
+                            wait = 1
+                        option = input("To print a list of users online press l, to start chatting with a user online enter their user name, to quit press q.")
+                        continue
                     receiver = s[0]
                     message = s[1]
                     self.sendMessage(connection,receiver,message)
+                    while lock.locked():
+                        wait = 1
                     option = input("To print a list of users online press l, to start chatting with a user online enter their user name, to quit press q.")
             except KeyboardInterrupt:
                 quit = True
@@ -230,7 +267,7 @@ class Client:
                 quit = True
                 print(type(exc))
                 print(exc.args)
-
+                print('messagePrompt')
 
 
 
