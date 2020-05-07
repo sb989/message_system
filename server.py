@@ -19,8 +19,8 @@ def createAccount(conn,crsr,sqlconn):
     user = conn.recv(sizeofuser)
     crsr.execute(userExistCommand,(user.decode(),))
     ans = crsr.fetchall()
-    print(ans)
-    print(ans[0][0])
+    #print(ans)
+    #print(ans[0][0])
     while ans[0][0] > 0:
         conn.send((1).to_bytes(1,byteorder='big'))
         sizeofuser = int.from_bytes(conn.recv(28),byteorder='big')
@@ -36,8 +36,7 @@ def createAccount(conn,crsr,sqlconn):
     key = base64.urlsafe_b64encode(kdf.derive(user))
     f = Fernet(key)
     encPword = f.encrypt(pword)
-    print('salt is ')
-    print(salt)
+    print('salt is ',salt,'\n')
     crsr.execute(createCommand,(user.decode(),encPword,'OFFLINE',salt,))
     sqlconn.commit()
 
@@ -52,7 +51,6 @@ def login(conn,crsr,sqlconn):
     user = conn.recv(sizeofuser)
     crsr.execute(userExistCommand,(user,))
     ans = crsr.fetchall()
-    print('the amount of usernames that match that are ')
 
     while ans[0][0] == 0:
         conn.send((1).to_bytes(1,byteorder='big'))
@@ -68,9 +66,8 @@ def login(conn,crsr,sqlconn):
     crsr.execute(getSalt,(user.decode(),))
     salt = (crsr.fetchall())[0][0]
     salt = bytes(salt)
-    print('the salt returned is')
-    print(salt)
-    print(type(salt))
+    print('the salt returned is',salt,'\n')
+    print('salt is a ',type(salt),'\n')
     crsr.execute(retreivePwordCommand,(user.decode(),))
     ans = (crsr.fetchall())[0][0]
     ans = ans.encode()
@@ -81,12 +78,13 @@ def login(conn,crsr,sqlconn):
     key = base64.urlsafe_b64encode(kdf.derive(user))
     f = Fernet(key)
     ans = f.decrypt(ans)
-    print(ans)
+    print('the actual password is ',ans,'\n')
+    print('the password received is ',pword,'\n')
     while ans != pword:
         conn.send((1).to_bytes(1,byteorder='big'))
         sizeofpword = int.from_bytes(conn.recv(28),byteorder='big')
         pword = conn.recv(sizeofpword)
-        print(pword)
+        print('the password received is ',pword,'\n')
     conn.send((0).to_bytes(1,byteorder='big'))
     sizeofpkey = int.from_bytes(conn.recv(28),byteorder='big')
     pkey = conn.recv(sizeofpkey)
@@ -99,7 +97,7 @@ def returnOnlineUsers(conn,crsr,sqlconn):
     getUsersOnline = "SELECT Username FROM user_info WHERE (LoggedIn = 'ONLINE')"
     crsr.execute(getUsersOnline)
     users = crsr.fetchall()
-    print(users)
+    print('users online are ',users,'\n')
     users = str(users)
     users = users.encode()
     sizeofusers = sys.getsizeof(users)
@@ -111,7 +109,7 @@ def receiveMessage(conn,crsr,sqlconn,q,user):
     userExistCommand = 'SELECT COUNT(Username) FROM user_info WHERE (Username = %s)'
     sizeofreceiver = int.from_bytes(conn.recv(28),byteorder='big')
     receiver = conn.recv(sizeofreceiver)
-    print(receiver.decode())
+    print('the recepient of the message is ',receiver.decode(),'\n')
     crsr.execute(userExistCommand,(receiver.decode(),))
     amount = crsr.fetchall()
     if amount[0][0] == 0:
@@ -127,37 +125,37 @@ def receiveMessage(conn,crsr,sqlconn,q,user):
     else:
         #print(key[0])
         key = key[0][0]
-        print('key before bytes method',key)
+        print('key before bytes method',key,'\n')
         key = bytes(key)
-        print("key is ",key)
+        print("key is ",key,'\n')
         conn.send((sys.getsizeof(key)).to_bytes(3,byteorder='big'))
         conn.send(key)
         print('valid receiver')
         sizeofmess = int.from_bytes(conn.recv(28),byteorder='big')
-        print('sizeofmess is',sizeofmess)
+        print('sizeofmess is',sizeofmess,'\n')
         mess = conn.recv(sizeofmess)
-        print('mess is ',mess)
+        print('mess is ',mess,'\n')
         crsr.execute(getOnlineUserPublicKey,(user,))
         publickey = crsr.fetchall()
         publickey = publickey[0][0]
-        print('public key is ',publickey)
+        print('public key is ',publickey,'\n')
         l = []
         l.append(receiver)
         l.append(mess)
         l.append(publickey)
         q.put(l)
-        print(q.qsize())
+        print('the size of the queue is ',q.qsize(),'\n')
 
 def sendMessage(conn,user,q,lock):
-    print('starting sendMessage thread')
+    print('starting sendMessage thread','\n')
     while True:
         try:
             if not q.empty() and not lock.locked():
                 print('q is not empty rn')
-                print(q.qsize())
+                print('the size of the queue is ',q.qsize(),'\n')
                 for i in range(q.qsize()):
                     x = q.get()
-                    print(x)
+                    print('x is ',x,'\n')
                     if x[0].decode() == user:
                         print('found a message for me')
                         pack = []
@@ -165,7 +163,7 @@ def sendMessage(conn,user,q,lock):
                         pack.append(x[1])
                         pack.append(x[2])
                         s = str(pack)
-                        print('the message im sending is ',pack)
+                        print('the message im sending is ',pack,'\n')
                         enc_s = s.encode()
                         sizeofenc_s = sys.getsizeof(enc_s)
                         conn.send((sizeofenc_s).to_bytes(3,byteorder='big'))
@@ -173,8 +171,8 @@ def sendMessage(conn,user,q,lock):
                         break
                     q.put(x)
         except Exception as exc:
-            print(type(exc))
-            print(exc.args)
+            print(type(exc),'\n')
+            print(exc.args,'\n')
             break
 
 
@@ -235,8 +233,8 @@ def userLoop(conn_addr,q):
         sys.exit(0)
         print('closing')
     except Exception as exc:
-        print(type(exc))
-        print(exc.args)
+        print(type(exc),'\n')
+        print(exc.args,'\n')
         if online:
             sm.join()
             crsr.execute(updateLoggedIn,('OFFLINE',user,))
@@ -271,8 +269,7 @@ except:
     sock.close()
     sys.exit(0)
 while loop:
-    print('number of threads is ')
-    print(threading.active_count())
+    print('number of threads is ',threading.active_count())
     try:
         ul = threading.Thread(target=userLoop,args=(ssock.accept(),q))
         ul.daemon = True

@@ -198,41 +198,51 @@ class Client:
                 print('messageReceiver')
                 #print('read time out. retrying.')
     def sendMessage(self,connection,receiver,message):
-        connection.send((1).to_bytes(1,byteorder='big'))
-        sizeofreceiver = sys.getsizeof(receiver)
-        connection.send((sizeofreceiver).to_bytes(3,byteorder='big'))
-        connection.send(receiver.encode())
-        #sizeofresponse = int.from_bytes(connection.recv(28),byteorder='big')
-        #if(self.q.empty()):
-        #    print('q is empty. waiting...')
-        while(self.q.empty()):
-            waiting = 1
-        response = self.q.get()
-        #response = connection.recv(sizeofresponse)
-        print('response is')
-        print(response)
-        if(response.decode() == '0'):
-            print('The receiver entered is not online')
-        elif(response.decode() =='1'):
-            print('The receiver entered does not exist')
-        else:
+        try:
+            connection.send((1).to_bytes(1,byteorder='big'))
+            sizeofreceiver = sys.getsizeof(receiver)
+            connection.send((sizeofreceiver).to_bytes(3,byteorder='big'))
+            connection.send(receiver.encode())
+            #sizeofresponse = int.from_bytes(connection.recv(28),byteorder='big')
+            #if(self.q.empty()):
+            #    print('q is empty. waiting...')
+            while(self.q.empty()):
+                waiting = 1
+            response = self.q.get()
+            #response = connection.recv(sizeofresponse)
+            print('response is')
+            print(response)
             try:
-                print('encrypting the message to send it')
-                format = self.username+':'
-                message = format+message
-                prkey = nacl.public.PrivateKey(self.privateKey)
-                pukey = nacl.public.PublicKey(response)
-                box = Box(prkey,pukey)
-                enc = box.encrypt(message.encode())
-                enc = bytes(enc)
-                sizeofenc = sys.getsizeof(enc)
-                connection.send((sizeofenc).to_bytes(3,byteorder='big'))
-                connection.send(enc)
-                print('finisehd sending message')
-            except Exception as exc:
-                print(type(exc))
-                print(exc.args)
-                print('sendMessage')
+                if(response.decode() == '0'):
+                    print('The receiver entered is not online')
+                    return
+                elif(response.decode() =='1'):
+                    print('The receiver entered does not exist')
+                    return
+            except UnicodeDecodeError:
+                pass
+            finally:
+                try:
+                    print('encrypting the message to send it')
+                    format = self.username+':'
+                    message = format+message
+                    prkey = nacl.public.PrivateKey(self.privateKey)
+                    pukey = nacl.public.PublicKey(response)
+                    box = Box(prkey,pukey)
+                    enc = box.encrypt(message.encode())
+                    enc = bytes(enc)
+                    sizeofenc = sys.getsizeof(enc)
+                    connection.send((sizeofenc).to_bytes(3,byteorder='big'))
+                    connection.send(enc)
+                    print('finisehd sending message')
+                except Exception as exc:
+                    print(type(exc))
+                    print(exc.args)
+                    print('innersendMessage')
+        except Exception as exc:
+            print(type(exc))
+            print(exc.args)
+            print('outersendMessage')
     def messagePrompt(self,connection):
         quit = False
         while lock.locked():
