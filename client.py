@@ -165,7 +165,7 @@ class Client:
                     lock.acquire()
                     print('\nreceived a message\n')
                     print('The message in byte form is ',message,'\n')
-                    print('\nThe message in string form is ,'message.decode(),'\n')
+                    print('\nThe message in string form is ',message.decode(),'\n')
                     l = eval(message.decode())
                     #print(l,'\n')
                     #l = l.decode()
