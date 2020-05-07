@@ -125,37 +125,37 @@ def receiveMessage(conn,crsr,sqlconn,q,user):
     else:
         #print(key[0])
         key = key[0][0]
-        print('key before bytes method',key,'\n')
+        #print('key before bytes method',key,'\n')
         key = bytes(key)
         print("key is ",key,'\n')
         conn.send((sys.getsizeof(key)).to_bytes(3,byteorder='big'))
         conn.send(key)
         print('valid receiver')
         sizeofmess = int.from_bytes(conn.recv(28),byteorder='big')
-        print('sizeofmess is',sizeofmess,'\n')
+        #print('sizeofmess is',sizeofmess,'\n')
         mess = conn.recv(sizeofmess)
-        print('mess is ',mess,'\n')
+        #print('mess is ',mess,'\n')
         crsr.execute(getOnlineUserPublicKey,(user,))
         publickey = crsr.fetchall()
         publickey = publickey[0][0]
-        print('public key is ',publickey,'\n')
+        #print('public key is ',publickey,'\n')
         l = []
         l.append(receiver)
         l.append(mess)
         l.append(publickey)
         q.put(l)
-        print('the size of the queue is ',q.qsize(),'\n')
+        #print('the size of the queue is ',q.qsize(),'\n')
 
 def sendMessage(conn,user,q,lock):
     print('starting sendMessage thread','\n')
     while True:
         try:
             if not q.empty() and not lock.locked():
-                print('q is not empty rn')
-                print('the size of the queue is ',q.qsize(),'\n')
+                #print('q is not empty rn')
+                #print('the size of the queue is ',q.qsize(),'\n')
                 for i in range(q.qsize()):
                     x = q.get()
-                    print('x is ',x,'\n')
+                    #print('x is ',x,'\n')
                     if x[0].decode() == user:
                         print('found a message for me')
                         pack = []
